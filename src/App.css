@@ -1,0 +1,32 @@
+#root {
+  z-index: 1;
+}
+
+#inspector {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+}
+
+#renderCanvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+  font-size: 0;
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 0;
+}
+
+canvas {
+  outline: none;
+}
+
+:root {
+  font-family: "DM Sans", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: normal;
+  font-style: normal;
+}
