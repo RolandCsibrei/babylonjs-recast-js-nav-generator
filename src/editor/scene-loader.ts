@@ -24,6 +24,6 @@ export async function loadModelFromBlob(
   return null;
 }
 
-export async function loadDefaultModel() {
+export async function loadDefaultGlb() {
   await SceneLoader.ImportMeshAsync("", "/model/", "dungeon.glb");
 }

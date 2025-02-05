@@ -15,6 +15,7 @@
     "@babylonjs/inspector": "^7.47.2",
     "@babylonjs/loaders": "^7.47.2",
     "@preact/signals": "^2.0.1",
+    "@preact/signals-react": "^3.0.1",
     "leva": "^0.10.0",
     "react": "19.0.0",
     "react-dom": "19.0.0",

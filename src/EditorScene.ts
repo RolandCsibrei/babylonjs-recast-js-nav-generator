@@ -5,8 +5,12 @@ import { Vector3 } from "@babylonjs/core/Maths/math.vector";
 import { Mesh } from "@babylonjs/core/Meshes/mesh";
 import { Scene } from "@babylonjs/core/scene";
 import { AdvancedDynamicTexture } from "@babylonjs/gui/2D/advancedDynamicTexture";
-import { signalModelBlob, signalNavMeshParameters } from "./editor/signals";
-import { loadDefaultModel, loadModelFromBlob } from "./editor/scene-loader";
+import {
+  signalModelBlob,
+  signalNavMesh,
+  signalNavMeshParameters,
+} from "./editor/signals";
+import { loadDefaultGlb, loadModelFromBlob } from "./editor/scene-loader";
 
 import { init as initRecast } from "recast-navigation";
 
@@ -46,7 +50,7 @@ export class EditorScene {
   public async init() {
     await this._initNavigation();
 
-    await loadDefaultModel();
+    await loadDefaultGlb();
 
     this._hookSignals();
 
@@ -119,16 +123,18 @@ export class EditorScene {
     });
   }
 
-  private _removeAllNodes() {
-    const transformNodestoDispose = [...this.scene.transformNodes];
-    transformNodestoDispose.forEach((n) => {
-      n.dispose(false, true);
-    });
+  private _removeExistingModels() {
+    const transformNodeIdstoDispose = this.scene.transformNodes.map(
+      (n) => n.id
+    );
+    const meshNodeIdstoDispose = this.scene.meshes.map((n) => n.id);
+    this._diposeNodes([...transformNodeIdstoDispose, ...meshNodeIdstoDispose]);
+  }
 
-    const meshesToDispose = [...this.scene.meshes];
-    meshesToDispose.forEach((m) => {
-      m.dispose(false, true);
-    });
+  private _diposeNodes(ids: string[]) {
+    for (const id of ids) {
+      this.scene.getNodeById(id)?.dispose();
+    }
   }
 
   private _hookSignals() {
@@ -144,11 +150,14 @@ export class EditorScene {
         return;
       }
 
+      // generate the navmesh
       const meshes = this.scene.meshes.filter(
         (m) => m.name !== "__root__"
       ) as Mesh[];
       this._navigation.createNavMesh(meshes, navMeshParams);
+      signalNavMesh.value = this._navigation.navMesh ?? null;
 
+      // generate the debug navmesh
       if (this._debugNavMesh) {
         this._debugNavMesh.dispose();
       }
@@ -161,12 +170,15 @@ export class EditorScene {
   private _hookModelBlob() {
     // TODO: unsubscribe
     signalModelBlob.subscribe(async (blob) => {
-      if (blob) {
-        this._removeAllNodes();
-        await loadModelFromBlob(blob, "model.glb", this.scene);
+      this._removeExistingModels();
 
-        zoomOnScene(this.scene, this.camera);
+      if (blob) {
+        await loadModelFromBlob(blob, "model.glb", this.scene);
+      } else {
+        await loadDefaultGlb();
       }
+
+      zoomOnScene(this.scene, this.camera);
     });
   }
 }
