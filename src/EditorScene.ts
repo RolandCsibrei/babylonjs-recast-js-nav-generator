@@ -19,8 +19,10 @@ import { hookInspector } from "./editor/inspector";
 import { zoomOnScene } from "./editor/camera";
 import { StandardMaterial } from "@babylonjs/core";
 import { download } from "./download";
+import { GLTF2Export } from "@babylonjs/serializers/glTF/2.0/glTFSerializer";
 
 export const MAIN_LIGHT_NAME = "main-light";
+const NAV_MESH_NAME = "nav-mesh";
 
 export class EditorScene {
   private _engine!: Engine;
@@ -163,6 +165,7 @@ export class EditorScene {
         this._debugNavMesh.dispose();
       }
       this._debugNavMesh = this._navigation.createDebugNavMesh(this.scene);
+      this._debugNavMesh.name = NAV_MESH_NAME;
       const material = new StandardMaterial("debug");
       this._debugNavMesh.material = material;
     });
@@ -188,7 +191,15 @@ export class EditorScene {
       return;
     }
     const navMeshExport = exportNavMesh(this.navigation.navMesh);
-
     download(navMeshExport, "application/octet-stream", "navmesh.bin");
+  }
+
+  public async exportAsGlb() {
+    const glb = await GLTF2Export.GLBAsync(this.scene, "navmesh.glb", {
+      shouldExportNode: function (node) {
+        return node.name === NAV_MESH_NAME;
+      },
+    });
+    glb.downloadFiles();
   }
 }

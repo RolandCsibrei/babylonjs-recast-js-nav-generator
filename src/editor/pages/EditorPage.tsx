@@ -28,7 +28,7 @@ export function EditorPage() {
   };
 
   const exportAsGlb = () => {
-    //
+    signalEditor.peek()?.exportAsGlb();
   };
 
   const exportAsRecastNavMesh = () => {
