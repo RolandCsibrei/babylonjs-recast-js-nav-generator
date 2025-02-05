@@ -9,6 +9,8 @@ import {
 import { useNavMeshActionsControls } from "../leva-controls/navmesh-actions";
 import { useSignals } from "@preact/signals-react/runtime";
 import { useNavMeshGenerationControls } from "../leva-controls/navmesh-config";
+import { useDebugDisplayOptionsControls } from "../leva-controls/debug-display-options";
+import { useGlbDisplayOptionsControls } from "../leva-controls/glb-display-options";
 export function EditorPage() {
   useSignals();
 
@@ -50,6 +52,10 @@ export function EditorPage() {
     exportAsRecastNavMesh,
     navMesh: signalNavMesh.value,
   });
+
+  useGlbDisplayOptionsControls();
+  useDebugDisplayOptionsControls();
+  // signalDisplayModel.value = displayModel;
 
   const { navMeshConfig } = useNavMeshGenerationControls();
 

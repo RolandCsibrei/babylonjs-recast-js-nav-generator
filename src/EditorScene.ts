@@ -6,9 +6,11 @@ import { Mesh } from "@babylonjs/core/Meshes/mesh";
 import { Scene } from "@babylonjs/core/scene";
 import { AdvancedDynamicTexture } from "@babylonjs/gui/2D/advancedDynamicTexture";
 import {
+  signalDebugDisplayOptions,
   signalModelBlob,
   signalNavMesh,
   signalNavMeshParameters,
+  signGlbDisplayOptions,
 } from "./editor/signals";
 import { loadDefaultGlb, loadModelFromBlob } from "./editor/scene-loader";
 
@@ -17,7 +19,7 @@ import { exportNavMesh, init as initRecast } from "recast-navigation";
 import { RecastNavigationJSPlugin } from "./editor/plugin/RecastNavigationJSPlugin";
 import { hookInspector } from "./editor/inspector";
 import { zoomOnScene } from "./editor/camera";
-import { StandardMaterial } from "@babylonjs/core";
+import { Color3, StandardMaterial } from "@babylonjs/core";
 import { download } from "./download";
 import { GLTF2Export } from "@babylonjs/serializers/glTF/2.0/glTFSerializer";
 
@@ -25,11 +27,12 @@ export const MAIN_LIGHT_NAME = "main-light";
 const NAV_MESH_NAME = "nav-mesh";
 
 export class EditorScene {
-  private _engine!: Engine;
-  private _scene!: Scene;
+  private _engine: Engine;
+  private _scene: Scene;
   private _camera: ArcRotateCamera;
-  private _ui!: AdvancedDynamicTexture;
+  private _ui: AdvancedDynamicTexture;
   private _navigation!: RecastNavigationJSPlugin;
+  private _debugNavMeshMaterial: StandardMaterial;
 
   private _debugNavMesh: Mesh;
 
@@ -48,6 +51,7 @@ export class EditorScene {
     this._scene = scene;
     this._camera = camera;
     this._ui = AdvancedDynamicTexture.CreateFullscreenUI("ui");
+    this._debugNavMeshMaterial = this._createDebugNavMeshMaterial();
   }
 
   public async init() {
@@ -126,6 +130,12 @@ export class EditorScene {
     });
   }
 
+  private _createDebugNavMeshMaterial() {
+    const material = new StandardMaterial("debug-nav-mesh");
+    material.disableLighting = true;
+    return material;
+  }
+
   private _removeExistingModels() {
     const transformNodeIdstoDispose = this.scene.transformNodes.map(
       (n) => n.id
@@ -145,6 +155,32 @@ export class EditorScene {
 
     this._hookModelBlob();
     this._hookNavMeshParamaters();
+    this._hookDisplayModel();
+    this._hookDisplayOptions();
+  }
+
+  private _hookDisplayModel() {
+    signGlbDisplayOptions.subscribe((options) => {
+      const roots = this.scene.meshes.filter((m) => m.name === "__root__");
+      for (const m of roots) {
+        m.setEnabled(options?.displayModel ?? false);
+      }
+    });
+  }
+
+  private _hookDisplayOptions() {
+    signalDebugDisplayOptions.subscribe((options) => {
+      if (!options) {
+        return;
+      }
+
+      this._debugNavMeshMaterial.wireframe =
+        options.navMeshGeneratorInputWireframe;
+      this._debugNavMeshMaterial.alpha = options.navMeshGeneratorInputOpacity;
+      this._debugNavMeshMaterial.emissiveColor = Color3.FromHexString(
+        options.navMeshGeneratorInputDebugColor
+      );
+    });
   }
 
   private _hookNavMeshParamaters() {
@@ -166,8 +202,7 @@ export class EditorScene {
       }
       this._debugNavMesh = this._navigation.createDebugNavMesh(this.scene);
       this._debugNavMesh.name = NAV_MESH_NAME;
-      const material = new StandardMaterial("debug");
-      this._debugNavMesh.material = material;
+      this._debugNavMesh.material = this._debugNavMeshMaterial;
     });
   }
 

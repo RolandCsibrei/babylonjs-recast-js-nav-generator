@@ -10,6 +10,19 @@ const signalIsInspectorOpen = signal(false);
 const signalNavMeshParameters = signal<NavMeshParameters>();
 const signalNavMesh = signal<Nullable<NavMesh>>(null);
 
+const signalDisplayModel = signal(true);
+
+const signGlbDisplayOptions = signal<{
+  displayModel: boolean;
+}>();
+
+const signalDebugDisplayOptions = signal<{
+  displayNavMeshGenerationInput: boolean;
+  navMeshGeneratorInputWireframe: boolean;
+  navMeshGeneratorInputOpacity: number;
+  navMeshGeneratorInputDebugColor: string;
+}>();
+
 export {
   signalEditor,
   //
@@ -17,4 +30,8 @@ export {
   signalIsInspectorOpen,
   signalNavMeshParameters,
   signalNavMesh,
+  //
+  signalDisplayModel,
+  signalDebugDisplayOptions,
+  signGlbDisplayOptions,
 };
