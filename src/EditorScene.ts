@@ -12,12 +12,13 @@ import {
 } from "./editor/signals";
 import { loadDefaultGlb, loadModelFromBlob } from "./editor/scene-loader";
 
-import { init as initRecast } from "recast-navigation";
+import { exportNavMesh, init as initRecast } from "recast-navigation";
 
 import { RecastNavigationJSPlugin } from "./editor/plugin/RecastNavigationJSPlugin";
 import { hookInspector } from "./editor/inspector";
 import { zoomOnScene } from "./editor/camera";
 import { StandardMaterial } from "@babylonjs/core";
+import { download } from "./download";
 
 export const MAIN_LIGHT_NAME = "main-light";
 
@@ -180,5 +181,14 @@ export class EditorScene {
 
       zoomOnScene(this.scene, this.camera);
     });
+  }
+
+  public exportAsRecastNavMesh() {
+    if (!this.navigation.navMesh) {
+      return;
+    }
+    const navMeshExport = exportNavMesh(this.navigation.navMesh);
+
+    download(navMeshExport, "application/octet-stream", "navmesh.bin");
   }
 }

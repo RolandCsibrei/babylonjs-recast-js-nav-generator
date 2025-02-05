@@ -1,6 +1,7 @@
 import { Leva } from "leva";
 import { useGlbActionsControls } from "../leva-controls/glb-actions";
 import {
+  signalEditor,
   signalModelBlob,
   signalNavMesh,
   signalNavMeshParameters,
@@ -31,7 +32,7 @@ export function EditorPage() {
   };
 
   const exportAsRecastNavMesh = () => {
-    //
+    signalEditor.peek()?.exportAsRecastNavMesh();
   };
 
   // Leva controls

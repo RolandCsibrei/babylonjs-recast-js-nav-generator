@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import FileLoader from "./editor/components/FileLoader";
 import { EditorScene } from "./EditorScene";
 import { EditorPage } from "./editor/pages/EditorPage";
+import { signalEditor } from "./editor/signals";
 
 function App() {
   // create the Editor instance
@@ -12,7 +13,9 @@ function App() {
 
   useEffect(() => {
     // init the Editor
-    void editorScene.init();
+    editorScene.init().then(() => {
+      signalEditor.value = editorScene;
+    });
   });
   return (
     <>
