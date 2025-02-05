@@ -1,11 +1,14 @@
 import { ArcRotateCamera } from "@babylonjs/core/Cameras/arcRotateCamera";
 import { Engine } from "@babylonjs/core/Engines/engine";
 import { HemisphericLight } from "@babylonjs/core/Lights/hemisphericLight";
-import { Vector3 } from "@babylonjs/core/Maths/math.vector";
+import { Matrix, Vector3 } from "@babylonjs/core/Maths/math.vector";
 import { Mesh } from "@babylonjs/core/Meshes/mesh";
 import { Scene } from "@babylonjs/core/scene";
 import { AdvancedDynamicTexture } from "@babylonjs/gui/2D/advancedDynamicTexture";
+import { GLTF2Export } from "@babylonjs/serializers/glTF/2.0/glTFSerializer";
+import { GridMaterial } from "@babylonjs/materials/grid/gridMaterial";
 import {
+  signalClippingPlanes,
   signalDebugDisplayOptions,
   signalModelBlob,
   signalNavMesh,
@@ -19,9 +22,15 @@ import { exportNavMesh, init as initRecast } from "recast-navigation";
 import { RecastNavigationJSPlugin } from "./editor/plugin/RecastNavigationJSPlugin";
 import { hookInspector } from "./editor/inspector";
 import { zoomOnScene } from "./editor/camera";
-import { Color3, StandardMaterial } from "@babylonjs/core";
+
 import { download } from "./download";
-import { GLTF2Export } from "@babylonjs/serializers/glTF/2.0/glTFSerializer";
+import { StandardMaterial } from "@babylonjs/core/Materials/standardMaterial";
+import { CreateGround } from "@babylonjs/core/Meshes/Builders/groundBuilder";
+import { Color3 } from "@babylonjs/core/Maths/math.color";
+import { CreatePlane } from "@babylonjs/core/Meshes/Builders/planeBuilder";
+import { Plane } from "@babylonjs/core/Maths/math.plane";
+import { UtilityLayerRenderer } from "@babylonjs/core/Rendering/utilityLayerRenderer";
+import { AxisDragGizmo } from "@babylonjs/core/Gizmos/axisDragGizmo";
 
 export const MAIN_LIGHT_NAME = "main-light";
 const NAV_MESH_NAME = "nav-mesh";
@@ -34,7 +43,7 @@ export class EditorScene {
   private _navigation!: RecastNavigationJSPlugin;
   private _debugNavMeshMaterial: StandardMaterial;
 
-  private _debugNavMesh: Mesh;
+  private _debugNavMesh!: Mesh; // TODO: move to hook
 
   constructor(private _canvas: HTMLCanvasElement) {
     const { engine, scene, camera } = this._createScene(this._canvas);
@@ -61,6 +70,7 @@ export class EditorScene {
 
     this._hookSignals();
 
+    // this._createGround();
     zoomOnScene(this.scene, this.camera);
 
     this._runRenderLoop();
@@ -130,6 +140,14 @@ export class EditorScene {
     });
   }
 
+  private _createGround() {
+    const groundMesh = CreateGround("ground", { width: 1000, height: 1000 });
+    const groundMaterial = new GridMaterial("grid");
+    groundMaterial.lineColor = new Color3(0.1, 0.1, 0.1);
+    groundMaterial.mainColor = new Color3(0.25, 0.25, 0.25);
+    groundMesh.material = groundMaterial;
+  }
+
   private _createDebugNavMeshMaterial() {
     const material = new StandardMaterial("debug-nav-mesh");
     material.disableLighting = true;
@@ -157,6 +175,106 @@ export class EditorScene {
     this._hookNavMeshParamaters();
     this._hookDisplayModel();
     this._hookDisplayOptions();
+    this._hookClipPlanes();
+  }
+
+  private _hookClipPlanes() {
+    const utilLayer = new UtilityLayerRenderer(this.scene);
+    // const rootBB = root.getHierarchyBoundingVectors(true);
+
+    //
+
+    const gizmo1 = new AxisDragGizmo(
+      new Vector3(0, 1, 0),
+      Color3.FromHexString("#00b894"),
+      utilLayer
+    );
+    gizmo1.updateGizmoRotationToMatchAttachedMesh = false;
+    gizmo1.updateGizmoPositionToMatchAttachedMesh = true;
+
+    let clipPlane1 = Plane.FromPositionAndNormal(
+      new Vector3(0, 1, 0),
+      new Vector3(0, 1, 0)
+    );
+    const plane1 = CreatePlane("clip-plane-1", {
+      size: 1000,
+      sourcePlane: clipPlane1,
+    });
+    const plane1Material = new StandardMaterial("plane1");
+    plane1.visibility = 0.12;
+    plane1Material.backFaceCulling = false;
+    plane1.material = plane1Material;
+    gizmo1.attachedMesh = plane1;
+
+    //
+
+    const gizmo2 = new AxisDragGizmo(
+      new Vector3(0, -1, 0),
+      Color3.FromHexString("#b89400"),
+      utilLayer
+    );
+    gizmo2.updateGizmoRotationToMatchAttachedMesh = false;
+    gizmo2.updateGizmoPositionToMatchAttachedMesh = true;
+
+    let clipPlane2 = Plane.FromPositionAndNormal(
+      new Vector3(0, 1, 0),
+      new Vector3(0, -1, 0)
+    );
+    const plane2 = CreatePlane("clip-plane-2", {
+      size: 1000,
+      sourcePlane: clipPlane1,
+    });
+    const plane2Material = new StandardMaterial("plane2");
+    plane2.visibility = 0.12;
+    plane2Material.backFaceCulling = false;
+    plane2.material = plane2Material;
+    gizmo2.attachedMesh = plane2;
+
+    //
+    let useClipPlane1 = false;
+    let useClipPlane2 = false;
+    signalClippingPlanes.subscribe((options) => {
+      useClipPlane1 = options?.useClipPlane1 ?? false;
+      useClipPlane2 = options?.useClipPlane2 ?? false;
+
+      plane1.setEnabled(useClipPlane1);
+      gizmo1.attachedMesh = useClipPlane1 ? plane1 : null;
+
+      plane2.setEnabled(useClipPlane2);
+      gizmo2.attachedMesh = useClipPlane2 ? plane2 : null;
+    });
+
+    //
+
+    this.scene.onBeforeRenderObservable.add(() => {
+      // const matrix1 = Matrix.Translation(0, plane1.position.y, 0);
+      // clipPlane1 = clipPlane1.transform(matrix1);
+
+      // const matrix2 = Matrix.Translation(0, plane2.position.y, 0);
+      // clipPlane2 = clipPlane2.transform(matrix2);
+
+      // console.log(clipPlane1.asArray());
+
+      if (useClipPlane1) {
+        clipPlane1 = Plane.FromPositionAndNormal(
+          new Vector3(0, plane1.position.y, 0),
+          new Vector3(0, 1, 0)
+        );
+        this._debugNavMeshMaterial.clipPlane = clipPlane1;
+      } else {
+        this._debugNavMeshMaterial.clipPlane = null;
+      }
+
+      if (useClipPlane2) {
+        clipPlane2 = Plane.FromPositionAndNormal(
+          new Vector3(0, plane2.position.y, 0),
+          new Vector3(0, -1, 0)
+        );
+        this._debugNavMeshMaterial.clipPlane2 = clipPlane2;
+      } else {
+        this._debugNavMeshMaterial.clipPlane2 = null;
+      }
+    });
   }
 
   private _hookDisplayModel() {
@@ -197,7 +315,7 @@ export class EditorScene {
         }
 
         const meshes = this.scene.meshes.filter(
-          (m) => m.name !== "__root__"
+          (m) => m.parent?.name === "__root__"
         ) as Mesh[];
         this._navigation.createNavMesh(meshes, navMeshParams);
         signalNavMesh.value = this._navigation.navMesh ?? null;

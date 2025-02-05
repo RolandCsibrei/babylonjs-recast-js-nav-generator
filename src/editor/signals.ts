@@ -25,6 +25,13 @@ const signalDebugDisplayOptions = signal<{
   navMeshGeneratorInputDebugColor: string;
 }>();
 
+const signalClippingPlanes = signal<
+  Partial<{
+    useClipPlane1: boolean;
+    useClipPlane2: boolean;
+  }>
+>();
+
 export {
   signalEditor,
   sigalnIsLoading,
@@ -37,4 +44,5 @@ export {
   signalDisplayModel,
   signalDebugDisplayOptions,
   signGlbDisplayOptions,
+  signalClippingPlanes,
 };
