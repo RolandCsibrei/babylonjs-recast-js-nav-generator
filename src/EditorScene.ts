@@ -12,17 +12,23 @@ import { init as initRecast } from "recast-navigation";
 
 import { RecastNavigationJSPlugin } from "./editor/plugin/RecastNavigationJSPlugin";
 import { hookInspector } from "./editor/inspector";
+import { zoomOnScene } from "./editor/camera";
+import { StandardMaterial } from "@babylonjs/core";
 
 export const MAIN_LIGHT_NAME = "main-light";
 
 export class EditorScene {
   private _engine!: Engine;
   private _scene!: Scene;
+  private _camera: ArcRotateCamera;
   private _ui!: AdvancedDynamicTexture;
   private _navigation!: RecastNavigationJSPlugin;
 
+  private _debugNavMesh: Mesh;
+
   constructor(private _canvas: HTMLCanvasElement) {
-    const { engine, scene } = this._createScene(this._canvas);
+    const { engine, scene, camera } = this._createScene(this._canvas);
+
     if (!engine) {
       throw new Error("Unable to create babylon.js engine!");
     }
@@ -33,6 +39,7 @@ export class EditorScene {
 
     this._engine = engine;
     this._scene = scene;
+    this._camera = camera;
     this._ui = AdvancedDynamicTexture.CreateFullscreenUI("ui");
   }
 
@@ -41,10 +48,14 @@ export class EditorScene {
 
     await loadDefaultModel();
 
+    this._hookSignals();
+
+    zoomOnScene(this.scene, this.camera);
+
     this._runRenderLoop();
 
     // debugger;
-    this._scene.onReadyObservable.addOnce(async () => {
+    this.scene.onReadyObservable.addOnce(async () => {
       // ready
     });
   }
@@ -55,6 +66,10 @@ export class EditorScene {
 
   public get scene() {
     return this._scene;
+  }
+
+  public get camera() {
+    return this._camera;
   }
 
   public get ui() {
@@ -87,8 +102,6 @@ export class EditorScene {
     const camera = new ArcRotateCamera("main", 0, 0, 50, Vector3.Zero());
     camera.attachControl();
 
-    this._hookSignals(scene);
-
     window.addEventListener("resize", () => {
       engine.resize();
     });
@@ -101,33 +114,58 @@ export class EditorScene {
   }
 
   private _runRenderLoop() {
-    this._scene.getEngine().runRenderLoop(() => {
-      this._scene.render();
+    this.scene.getEngine().runRenderLoop(() => {
+      this.scene.render();
     });
   }
 
   private _removeAllNodes() {
-    this._scene.transformNodes.forEach((n) => n.dispose(false, true));
-    this._scene.meshes.forEach((m) => m.dispose(false, true));
+    const transformNodestoDispose = [...this.scene.transformNodes];
+    transformNodestoDispose.forEach((n) => {
+      n.dispose(false, true);
+    });
+
+    const meshesToDispose = [...this.scene.meshes];
+    meshesToDispose.forEach((m) => {
+      m.dispose(false, true);
+    });
   }
 
-  private _hookSignals(scene: Scene) {
-    hookInspector(scene);
+  private _hookSignals() {
+    hookInspector(this.scene);
 
+    this._hookModelBlob();
+    this._hookNavMeshParamaters();
+  }
+
+  private _hookNavMeshParamaters() {
     signalNavMeshParameters.subscribe(async (navMeshParams) => {
       if (!navMeshParams) {
         return;
       }
 
-      this._navigation.createNavMesh(scene.meshes as Mesh[], navMeshParams);
-      this._navigation.createDebugNavMesh(this._scene);
-    });
+      const meshes = this.scene.meshes.filter(
+        (m) => m.name !== "__root__"
+      ) as Mesh[];
+      this._navigation.createNavMesh(meshes, navMeshParams);
 
+      if (this._debugNavMesh) {
+        this._debugNavMesh.dispose();
+      }
+      this._debugNavMesh = this._navigation.createDebugNavMesh(this.scene);
+      const material = new StandardMaterial("debug");
+      this._debugNavMesh.material = material;
+    });
+  }
+
+  private _hookModelBlob() {
     // TODO: unsubscribe
     signalModelBlob.subscribe(async (blob) => {
       if (blob) {
         this._removeAllNodes();
-        await loadModelFromBlob(blob, "model.glb", scene);
+        await loadModelFromBlob(blob, "model.glb", this.scene);
+
+        zoomOnScene(this.scene, this.camera);
       }
     });
   }

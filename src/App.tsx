@@ -13,12 +13,11 @@ function App() {
 
   const generateNavMesh = () => {
     console.log("Generate navmesh", navMeshConfig);
-    signalNavMeshParameters.value = navMeshConfig;
+    signalNavMeshParameters.value = { ...navMeshConfig };
   };
 
   const loadGlb = () => {
     document.getElementById("load-glb")?.click();
-    return {};
   };
 
   // Leva controls
