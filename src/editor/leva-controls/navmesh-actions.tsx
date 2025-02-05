@@ -1,28 +1,27 @@
-import { Nullable } from "@babylonjs/core/types";
-import { NavMesh } from "@recast-navigation/core/dist/nav-mesh";
 import { button, useControls } from "leva";
+import { useSignals } from "@preact/signals-react/runtime";
+
+import { sigalnIsLoading, signalNavMesh } from "../signals";
 
 export const useNavMeshActionsControls = ({
-  loading,
   generateNavMesh,
-  navMesh,
   exportAsRecastNavMesh,
 }: {
-  loading: boolean;
   generateNavMesh: () => void;
-  navMesh: Nullable<NavMesh>;
   exportAsRecastNavMesh: () => void;
 }) => {
+  useSignals();
+
   useControls(
     "NavMesh Actions",
     {
       "Generate NavMesh": button(() => generateNavMesh(), {
-        disabled: loading,
+        disabled: sigalnIsLoading.value,
       }),
       "Export as Recast NavMesh": button(exportAsRecastNavMesh, {
-        disabled: !navMesh,
+        disabled: !signalNavMesh.value,
       }),
     },
-    [generateNavMesh, loading]
+    [generateNavMesh]
   );
 };

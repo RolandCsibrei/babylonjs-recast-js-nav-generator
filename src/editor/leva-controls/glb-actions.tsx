@@ -1,33 +1,32 @@
-import { Nullable } from "@babylonjs/core/types";
 import { button, useControls } from "leva";
-import { NavMesh } from "recast-navigation";
+import { useSignals } from "@preact/signals-react/runtime";
+
+import { sigalnIsLoading, signalNavMesh } from "../signals";
 
 export const useGlbActionsControls = ({
-  loading,
   loadGlb,
   loadDefault,
   exportAsGlb,
-  navMesh,
 }: {
-  loading: boolean;
   loadGlb: () => void;
   loadDefault: () => void;
   exportAsGlb: () => void;
-  navMesh: Nullable<NavMesh>;
 }) => {
+  useSignals();
+
   useControls(
     "GLB Actions",
     {
       "Load GLB": button(() => loadGlb(), {
-        disabled: loading,
+        disabled: sigalnIsLoading.value,
       }),
       "Load Default GLB": button(() => loadDefault(), {
-        disabled: loading,
+        disabled: sigalnIsLoading.value,
       }),
       "Export as GLTF": button(exportAsGlb, {
-        disabled: !navMesh,
+        disabled: !signalNavMesh.value,
       }),
     },
-    [loading, loadGlb, navMesh]
+    [loadGlb]
   );
 };

@@ -190,19 +190,26 @@ export class EditorScene {
       }
 
       // generate the navmesh
-      const meshes = this.scene.meshes.filter(
-        (m) => m.name !== "__root__"
-      ) as Mesh[];
-      this._navigation.createNavMesh(meshes, navMeshParams);
-      signalNavMesh.value = this._navigation.navMesh ?? null;
+      try {
+        // remove the old debugnnav mesh if exists
+        if (this._debugNavMesh) {
+          this._debugNavMesh.dispose();
+        }
 
-      // generate the debug navmesh
-      if (this._debugNavMesh) {
-        this._debugNavMesh.dispose();
+        const meshes = this.scene.meshes.filter(
+          (m) => m.name !== "__root__"
+        ) as Mesh[];
+        this._navigation.createNavMesh(meshes, navMeshParams);
+        signalNavMesh.value = this._navigation.navMesh ?? null;
+
+        // generate the new debug navmesh
+        this._debugNavMesh = this._navigation.createDebugNavMesh(this.scene);
+        this._debugNavMesh.name = NAV_MESH_NAME;
+        this._debugNavMesh.material = this._debugNavMeshMaterial;
+      } catch (error) {
+        console.error(error);
+        signalNavMesh.value = null;
       }
-      this._debugNavMesh = this._navigation.createDebugNavMesh(this.scene);
-      this._debugNavMesh.name = NAV_MESH_NAME;
-      this._debugNavMesh.material = this._debugNavMeshMaterial;
     });
   }
 

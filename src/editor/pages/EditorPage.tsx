@@ -3,7 +3,6 @@ import { useGlbActionsControls } from "../leva-controls/glb-actions";
 import {
   signalEditor,
   signalModelBlob,
-  signalNavMesh,
   signalNavMeshParameters,
 } from "../signals";
 import { useNavMeshActionsControls } from "../leva-controls/navmesh-actions";
@@ -14,10 +13,7 @@ import { useGlbDisplayOptionsControls } from "../leva-controls/glb-display-optio
 export function EditorPage() {
   useSignals();
 
-  const loading = false;
-
   const generateNavMesh = () => {
-    console.log("Generate navmesh", navMeshConfig);
     signalNavMeshParameters.value = { ...navMeshConfig };
   };
 
@@ -39,24 +35,18 @@ export function EditorPage() {
 
   // Leva controls
   useGlbActionsControls({
-    loading,
     loadGlb,
     loadDefault,
     exportAsGlb,
-    navMesh: signalNavMesh.value,
   });
 
   useNavMeshActionsControls({
-    loading,
     generateNavMesh,
     exportAsRecastNavMesh,
-    navMesh: signalNavMesh.value,
   });
 
   useGlbDisplayOptionsControls();
   useDebugDisplayOptionsControls();
-  // signalDisplayModel.value = displayModel;
-
   const { navMeshConfig } = useNavMeshGenerationControls();
 
   return (

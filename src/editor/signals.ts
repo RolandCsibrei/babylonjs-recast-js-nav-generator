@@ -4,6 +4,8 @@ import { NavMesh } from "recast-navigation";
 import { Nullable } from "@babylonjs/core/types";
 import { EditorScene } from "../EditorScene";
 
+const sigalnIsLoading = signal(false);
+
 const signalEditor = signal<EditorScene>();
 const signalModelBlob = signal<Blob | null>(null);
 const signalIsInspectorOpen = signal(false);
@@ -25,6 +27,7 @@ const signalDebugDisplayOptions = signal<{
 
 export {
   signalEditor,
+  sigalnIsLoading,
   //
   signalModelBlob,
   signalIsInspectorOpen,
