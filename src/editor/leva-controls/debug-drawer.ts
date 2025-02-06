@@ -159,8 +159,4 @@ export function drawDebug(
   } else if (option === DebugDrawerOption.NAVMESH_BV_TREE) {
     debug.drawNavMeshBVTree(navMesh);
   }
-  // }, [debug, navMesh, option]);
-
-  // return enabled && debug && <primitive object={debug} />;
-  // return <>Hello</>;
 }
