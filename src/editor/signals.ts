@@ -4,6 +4,14 @@ import { NavMesh } from "recast-navigation";
 import { Nullable } from "@babylonjs/core/types";
 import { EditorScene } from "../EditorScene";
 
+export type AgentControls = {
+  agentEnabled: boolean;
+  agentRadius: number;
+  agentHeight: number;
+  agentMaxAcceleration: number;
+  agentMaxSpeed: number;
+};
+
 const sigalnIsLoading = signal(false);
 
 const signalEditor = signal<EditorScene>();
@@ -25,6 +33,10 @@ const signalDebugDisplayOptions = signal<{
   navMeshGeneratorInputDebugColor: string;
 }>();
 
+const signalTestAgentControls = signal<AgentControls>();
+const signalTestAgentStart = signal<{ x: number; y: number; z: number }>();
+const signalTestAgentTarget = signal<{ x: number; y: number; z: number }>();
+
 const signalClippingPlanes = signal<
   Partial<{
     useClipPlane1: boolean;
@@ -35,11 +47,16 @@ const signalClippingPlanes = signal<
 export {
   signalEditor,
   sigalnIsLoading,
+  signalIsInspectorOpen,
   //
   signalModelBlob,
-  signalIsInspectorOpen,
+  //
   signalNavMeshParameters,
   signalNavMesh,
+  //
+  signalTestAgentControls,
+  signalTestAgentStart,
+  signalTestAgentTarget,
   //
   signalDisplayModel,
   signalDebugDisplayOptions,

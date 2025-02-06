@@ -8,11 +8,15 @@ import { AdvancedDynamicTexture } from "@babylonjs/gui/2D/advancedDynamicTexture
 import { GLTF2Export } from "@babylonjs/serializers/glTF/2.0/glTFSerializer";
 import { GridMaterial } from "@babylonjs/materials/grid/gridMaterial";
 import {
+  AgentControls,
   signalClippingPlanes,
   signalDebugDisplayOptions,
   signalModelBlob,
   signalNavMesh,
   signalNavMeshParameters,
+  signalTestAgentControls,
+  signalTestAgentStart,
+  signalTestAgentTarget,
   signGlbDisplayOptions,
 } from "./editor/signals";
 import { loadDefaultGlb, loadModelFromBlob } from "./editor/scene-loader";
@@ -31,6 +35,19 @@ import { CreatePlane } from "@babylonjs/core/Meshes/Builders/planeBuilder";
 import { Plane } from "@babylonjs/core/Maths/math.plane";
 import { UtilityLayerRenderer } from "@babylonjs/core/Rendering/utilityLayerRenderer";
 import { AxisDragGizmo } from "@babylonjs/core/Gizmos/axisDragGizmo";
+import { TransformNode } from "@babylonjs/core/Meshes/transformNode";
+import { CreateBox } from "@babylonjs/core/Meshes/Builders/boxBuilder";
+import { ICrowd } from "@babylonjs/core/Navigation/INavigationEngine";
+import { CreateCapsule } from "@babylonjs/core/Meshes/Builders/capsuleBuilder";
+import {
+  PointerEventTypes,
+  PointerInfo,
+} from "@babylonjs/core/Events/pointerEvents";
+import {
+  CreateGreasedLine,
+  ISceneLoaderAsyncResult,
+  Nullable,
+} from "@babylonjs/core";
 
 export const MAIN_LIGHT_NAME = "main-light";
 const NAV_MESH_NAME = "nav-mesh";
@@ -44,6 +61,13 @@ export class EditorScene {
   private _debugNavMeshMaterial: StandardMaterial;
 
   private _debugNavMesh!: Mesh; // TODO: move to hook
+  private _crowd!: ICrowd; // TODO: move to hook
+  private _agent?: {
+    idx: number;
+    transform: TransformNode;
+    mesh: Mesh;
+    target?: Mesh;
+  };
 
   constructor(private _canvas: HTMLCanvasElement) {
     const { engine, scene, camera } = this._createScene(this._canvas);
@@ -81,6 +105,7 @@ export class EditorScene {
     });
   }
 
+  // TODO: remove getters
   public get engine() {
     return this._engine;
   }
@@ -176,6 +201,159 @@ export class EditorScene {
     this._hookDisplayModel();
     this._hookDisplayOptions();
     this._hookClipPlanes();
+    this._hookTestAgent();
+    this._hookTestAgentTargetPicker();
+    this._hookAgentMovement();
+  }
+
+  private _hookTestAgentTargetPicker() {
+    const pointerEventTypes = [PointerEventTypes.POINTERUP];
+    // TODO: unreg
+    const obersvable = this.scene.onPointerObservable.add((pi: PointerInfo) => {
+      if (!pointerEventTypes.includes(pi.type)) {
+        return;
+      }
+
+      if (
+        pi.pickInfo?.pickedMesh?.name === NAV_MESH_NAME &&
+        pi.pickInfo.pickedPoint
+      ) {
+        if (pi.event.button === 0) {
+          signalTestAgentTarget.value = pi.pickInfo.pickedPoint;
+        }
+        if (pi.event.button === 2) {
+          signalTestAgentStart.value = pi.pickInfo.pickedPoint;
+        }
+      }
+    });
+  }
+
+  private _hookAgentMovement() {
+    this._scene.onBeforeRenderObservable.add(() => {
+      if (!this._agent) {
+        {
+          return;
+        }
+      }
+
+      const deltaTime = this._scene.getEngine().getDeltaTime() / 1000; // DeltaTime in seconds
+      this._crowd.update(deltaTime);
+      this._agent.transform.position = this._crowd.getAgentPosition(
+        this._agent.idx
+      );
+    });
+  }
+
+  private _hookTestAgent() {
+    signalTestAgentControls.subscribe((controls) => {
+      if (!controls || !signalNavMesh.value) {
+        return;
+      }
+
+      this._createCrowdAndAgent(controls);
+    });
+
+    signalTestAgentStart.subscribe((position) => {
+      if (!position || !this._agent) {
+        return;
+      }
+      const positionOnNavMesh = this.navigation.getClosestPoint(position);
+      this._crowd.agentTeleport(this._agent?.idx, positionOnNavMesh);
+    });
+
+    signalTestAgentTarget.subscribe((position) => {
+      if (!position || !this._agent) {
+        return;
+      }
+      const targetOnNavMesh = this.navigation.getClosestPoint(position);
+      this._crowd.agentGoto(this._agent?.idx, targetOnNavMesh);
+
+      const pathPoints = this.navigation.computePath(
+        this._crowd.getAgentPosition(this._agent.idx),
+        targetOnNavMesh
+      );
+
+      this._scene.getMeshByName("path-line")?.dispose();
+
+      const pathLine = CreateGreasedLine(
+        "path-line",
+        {
+          points: pathPoints,
+        },
+        {
+          width: 0.2,
+        }
+      );
+      pathLine.renderingGroupId = 2;
+    });
+  }
+
+  private _disposeCrowd() {
+    if (this._crowd && this._agent?.idx) {
+      this._crowd.removeAgent(this._agent?.idx);
+      this._crowd.dispose();
+    }
+  }
+
+  private _createCrowdAndAgent(controls: AgentControls) {
+    if (!this._navigation) {
+      return;
+    }
+
+    const crowd = this._navigation.createCrowd(
+      1,
+      controls.agentRadius,
+      this._scene
+    );
+
+    this._crowd = crowd;
+
+    const agentParams = {
+      radius: controls.agentRadius, // Agent radius, controls how close it can get to obstacles
+      height: controls.agentHeight, // Agent height
+      maxSpeed: controls.agentMaxSpeed, // Agent speed
+      maxAcceleration: controls.agentMaxAcceleration, // Maximum acceleration
+      collisionQueryRange: controls.agentRadius * 2, // How far the agent will look ahead for collisions
+      pathOptimizationRange: controls.agentRadius * 3, // Range for path optimization
+      separationWeight: 4.0, // Avoidance behavior separation weight
+      obstacleAvoidanceType: 3, // High quality avoidance
+    };
+
+    const targetCube = CreateBox(
+      "target-cube",
+      { size: 0.1, height: 0.1 },
+      this._scene
+    );
+
+    // create agents
+    const singleAgentMesh = CreateCapsule(
+      "single-agent",
+      { height: 4, radius: 0.3 },
+      this._scene
+    );
+
+    const matAgent = new StandardMaterial("agent", this._scene);
+    const variation = Math.random();
+
+    matAgent.diffuseColor = new Color3(
+      0.4 + variation * 0.6,
+      0.3,
+      1.0 - variation * 0.3
+    );
+    singleAgentMesh.material = matAgent;
+
+    const randomPos = this._navigation.getClosestPoint(new Vector3(-20, 0, 0));
+
+    const transform = new TransformNode("agent-parent");
+    singleAgentMesh.parent = transform;
+
+    const agentIndex = crowd.addAgent(randomPos, agentParams, transform);
+    this._agent = {
+      idx: agentIndex,
+      transform: transform,
+      mesh: singleAgentMesh,
+      target: targetCube,
+    };
   }
 
   private _hookClipPlanes() {
@@ -336,11 +514,14 @@ export class EditorScene {
     signalModelBlob.subscribe(async (blob) => {
       this._removeExistingModels();
 
+      let loaded: Nullable<ISceneLoaderAsyncResult> = null;
       if (blob) {
-        await loadModelFromBlob(blob, "model.glb", this.scene);
+        loaded = await loadModelFromBlob(blob, "model.glb", this.scene);
       } else {
-        await loadDefaultGlb();
+        loaded = await loadDefaultGlb();
       }
+
+      loaded?.meshes.forEach((m) => (m.isPickable = false));
 
       zoomOnScene(this.scene, this.camera);
     });

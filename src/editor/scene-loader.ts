@@ -1,4 +1,7 @@
-import { SceneLoader } from "@babylonjs/core/Loading/sceneLoader";
+import {
+  ISceneLoaderAsyncResult,
+  SceneLoader,
+} from "@babylonjs/core/Loading/sceneLoader";
 import { Scene } from "@babylonjs/core/scene";
 import "@babylonjs/loaders/glTF";
 import "@babylonjs/loaders/glTF/2.0/Extensions";
@@ -7,15 +10,14 @@ export async function loadModelFromBlob(
   blob: Blob,
   filename: string,
   scene: Scene
-): Promise<void | null> {
+): Promise<ISceneLoaderAsyncResult | null> {
   try {
     if (blob) {
       const file = new File([blob], filename, {
         type: "application/octet-stream",
       });
 
-      await SceneLoader.ImportMeshAsync("", "", file, scene);
-      return;
+      return await SceneLoader.ImportMeshAsync("", "", file, scene);
     }
   } catch (e) {
     console.error("Failed to load from blob:", filename, e);
@@ -25,5 +27,5 @@ export async function loadModelFromBlob(
 }
 
 export async function loadDefaultGlb() {
-  await SceneLoader.ImportMeshAsync("", "/model/", "dungeon.glb");
+  return await SceneLoader.ImportMeshAsync("", "/model/", "dungeon.glb");
 }
