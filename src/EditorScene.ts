@@ -218,7 +218,7 @@ export class EditorScene {
   private _subscribeTestAgentTargetPicker() {
     const pointerEventTypes = [PointerEventTypes.POINTERUP];
     // TODO: unreg
-    const obersvable = this.scene.onPointerObservable.add((pi: PointerInfo) => {
+    this.scene.onPointerObservable.add((pi: PointerInfo) => {
       if (!pointerEventTypes.includes(pi.type)) {
         return;
       }
@@ -394,7 +394,7 @@ export class EditorScene {
       idx: agentIndex,
       transform: transform,
       mesh: singleAgentMesh,
-      target: targetCube,
+      // target: targetCube,
     };
   }
 
