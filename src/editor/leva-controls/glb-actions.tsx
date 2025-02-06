@@ -2,6 +2,7 @@ import { button, useControls } from "leva";
 import { useSignals } from "@preact/signals-react/runtime";
 
 import { sigalnIsLoading, signalNavMesh } from "../signals";
+import { levaText } from "./leva-text";
 
 export const useGlbActionsControls = ({
   loadGlb,
@@ -26,6 +27,8 @@ export const useGlbActionsControls = ({
       "Export as GLTF": button(exportAsGlb, {
         disabled: !signalNavMesh.value,
       }),
+
+      _: levaText("Alt/Option + I to toggle Inspector."),
     },
     [loadGlb]
   );
