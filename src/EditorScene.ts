@@ -7,6 +7,26 @@ import { Scene } from "@babylonjs/core/scene";
 import { AdvancedDynamicTexture } from "@babylonjs/gui/2D/advancedDynamicTexture";
 import { GLTF2Export } from "@babylonjs/serializers/glTF/2.0/glTFSerializer";
 import { GridMaterial } from "@babylonjs/materials/grid/gridMaterial";
+import { StandardMaterial } from "@babylonjs/core/Materials/standardMaterial";
+import { CreateGround } from "@babylonjs/core/Meshes/Builders/groundBuilder";
+import { Color3, Color4 } from "@babylonjs/core/Maths/math.color";
+import { CreatePlane } from "@babylonjs/core/Meshes/Builders/planeBuilder";
+import { Plane } from "@babylonjs/core/Maths/math.plane";
+import { UtilityLayerRenderer } from "@babylonjs/core/Rendering/utilityLayerRenderer";
+import { AxisDragGizmo } from "@babylonjs/core/Gizmos/axisDragGizmo";
+import { TransformNode } from "@babylonjs/core/Meshes/transformNode";
+import { ICrowd } from "@babylonjs/core/Navigation/INavigationEngine";
+import { CreateCapsule } from "@babylonjs/core/Meshes/Builders/capsuleBuilder";
+import {
+  PointerEventTypes,
+  PointerInfo,
+} from "@babylonjs/core/Events/pointerEvents";
+import { CreateGreasedLine } from "@babylonjs/core/Meshes/Builders/greasedLineBuilder";
+import { ISceneLoaderAsyncResult } from "@babylonjs/core/Loading/sceneLoader.js";
+import { Nullable } from "@babylonjs/core/types";
+
+import { exportNavMesh, init as initRecast } from "recast-navigation";
+
 import {
   AgentControls,
   signalClippingPlanes,
@@ -20,34 +40,10 @@ import {
   signGlbDisplayOptions,
 } from "./editor/signals";
 import { loadDefaultGlb, loadModelFromBlob } from "./editor/scene-loader";
-
-import { exportNavMesh, init as initRecast } from "recast-navigation";
-
 import { RecastNavigationJSPlugin } from "./plugin/RecastNavigationJSPlugin";
 import { hookInspector } from "./editor/inspector";
-
-import { download } from "./download";
-import { StandardMaterial } from "@babylonjs/core/Materials/standardMaterial";
-import { CreateGround } from "@babylonjs/core/Meshes/Builders/groundBuilder";
-import { Color3, Color4 } from "@babylonjs/core/Maths/math.color";
-import { CreatePlane } from "@babylonjs/core/Meshes/Builders/planeBuilder";
-import { Plane } from "@babylonjs/core/Maths/math.plane";
-import { UtilityLayerRenderer } from "@babylonjs/core/Rendering/utilityLayerRenderer";
-import { AxisDragGizmo } from "@babylonjs/core/Gizmos/axisDragGizmo";
-import { TransformNode } from "@babylonjs/core/Meshes/transformNode";
-import { CreateBox } from "@babylonjs/core/Meshes/Builders/boxBuilder";
-import { ICrowd } from "@babylonjs/core/Navigation/INavigationEngine";
-import { CreateCapsule } from "@babylonjs/core/Meshes/Builders/capsuleBuilder";
-import {
-  PointerEventTypes,
-  PointerInfo,
-} from "@babylonjs/core/Events/pointerEvents";
-import {
-  CreateGreasedLine,
-  ISceneLoaderAsyncResult,
-  Nullable,
-} from "@babylonjs/core";
 import { setCameraLimits, zoomOnScene } from "./editor/camera";
+import { download } from "./download";
 
 export const MAIN_LIGHT_NAME = "main-light";
 const NAV_MESH_NAME = "nav-mesh";
