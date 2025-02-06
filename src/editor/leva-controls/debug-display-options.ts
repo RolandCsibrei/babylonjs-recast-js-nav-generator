@@ -16,7 +16,6 @@ export const useDebugDisplayOptionsControls = () => {
       navMeshGeneratorInputDebugColor: {
         label: "Color",
         value: "#ff69b4",
-        // onEditEnd: setNavMeshGeneratorInputDebugColor,
       },
       navMeshGeneratorInputOpacity: {
         label: "Opacity",
@@ -30,35 +29,4 @@ export const useDebugDisplayOptionsControls = () => {
       },
     }
   );
-
-  return {
-    // displayModel,
-  };
 };
-
-//   const { navMeshDebugDraw, navMeshDebugDrawOption } = useControls(
-//     "Display Options.NavMesh",
-//     {
-//       _: levaText("The computed navigation mesh."),
-//       navMeshDebugDraw: {
-//         label: "Show NavMesh Debug Drawer",
-//         value: true,
-//       },
-//       navMeshDebugDrawOption: {
-//         label: "Display",
-//         value: DebugDrawerOption.NAVMESH,
-//         options: Object.values(DebugDrawerOption),
-//       },
-//     }
-//   );
-
-//   return {
-//     displayModel,
-//     navMeshGeneratorInputDebugColor,
-//     displayNavMeshGenerationInput,
-//     navMeshGeneratorInputWireframe,
-//     navMeshGeneratorInputOpacity,
-//     navMeshDebugDraw,
-//     navMeshDebugDrawOption,
-//   };
-// };

@@ -12,6 +12,7 @@ import { useDebugDisplayOptionsControls } from "../leva-controls/debug-display-o
 import { useGlbDisplayOptionsControls } from "../leva-controls/glb-display-options";
 import { useCliPlaneOptionsControls } from "../leva-controls/clipping-planes-options";
 import { useTestAgentControls } from "../leva-controls/agent-display-options";
+import { useDebugDrawerControls } from "../leva-controls/debug-draw-controls";
 export function EditorPage() {
   useSignals();
 
@@ -49,6 +50,7 @@ export function EditorPage() {
 
   useGlbDisplayOptionsControls();
   useDebugDisplayOptionsControls();
+  useDebugDrawerControls();
   const { navMeshConfig } = useNavMeshGenerationControls();
   useTestAgentControls();
 

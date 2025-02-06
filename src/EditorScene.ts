@@ -1,7 +1,7 @@
 import { ArcRotateCamera } from "@babylonjs/core/Cameras/arcRotateCamera";
 import { Engine } from "@babylonjs/core/Engines/engine";
 import { HemisphericLight } from "@babylonjs/core/Lights/hemisphericLight";
-import { Matrix, Vector3 } from "@babylonjs/core/Maths/math.vector";
+import { Vector3 } from "@babylonjs/core/Maths/math.vector";
 import { Mesh } from "@babylonjs/core/Meshes/mesh";
 import { Scene } from "@babylonjs/core/scene";
 import { AdvancedDynamicTexture } from "@babylonjs/gui/2D/advancedDynamicTexture";
@@ -25,7 +25,6 @@ import { exportNavMesh, init as initRecast } from "recast-navigation";
 
 import { RecastNavigationJSPlugin } from "./editor/plugin/RecastNavigationJSPlugin";
 import { hookInspector } from "./editor/inspector";
-import { zoomOnScene } from "./editor/camera";
 
 import { download } from "./download";
 import { StandardMaterial } from "@babylonjs/core/Materials/standardMaterial";
@@ -48,6 +47,7 @@ import {
   ISceneLoaderAsyncResult,
   Nullable,
 } from "@babylonjs/core";
+import { setCameraLimits, zoomOnScene } from "./editor/camera";
 
 export const MAIN_LIGHT_NAME = "main-light";
 const NAV_MESH_NAME = "nav-mesh";
@@ -146,6 +146,9 @@ export class EditorScene {
     //
 
     const camera = new ArcRotateCamera("main", 0, 0, 50, Vector3.Zero());
+    setCameraLimits(camera, {
+      panningSensitivity: 15,
+    });
     camera.attachControl();
 
     window.addEventListener("resize", () => {
@@ -281,6 +284,7 @@ export class EditorScene {
           points: pathPoints,
         },
         {
+          color: Color3.Blue(),
           width: 0.2,
         }
       );

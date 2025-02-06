@@ -3,6 +3,7 @@ import { NavMeshParameters } from "./plugin/RecastNavigationJSPlugin";
 import { NavMesh } from "recast-navigation";
 import { Nullable } from "@babylonjs/core/types";
 import { EditorScene } from "../EditorScene";
+import { DebugDrawerOption } from "./leva-controls/debug-drawer";
 
 export type AgentControls = {
   agentEnabled: boolean;
@@ -11,6 +12,8 @@ export type AgentControls = {
   agentMaxAcceleration: number;
   agentMaxSpeed: number;
 };
+
+type XYZ = { x: number; y: number; z: number };
 
 const sigalnIsLoading = signal(false);
 
@@ -34,8 +37,8 @@ const signalDebugDisplayOptions = signal<{
 }>();
 
 const signalTestAgentControls = signal<AgentControls>();
-const signalTestAgentStart = signal<{ x: number; y: number; z: number }>();
-const signalTestAgentTarget = signal<{ x: number; y: number; z: number }>();
+const signalTestAgentStart = signal<XYZ>();
+const signalTestAgentTarget = signal<XYZ>();
 
 const signalClippingPlanes = signal<
   Partial<{
@@ -43,6 +46,11 @@ const signalClippingPlanes = signal<
     useClipPlane2: boolean;
   }>
 >();
+
+const signalDebugDrawerControls = signal<{
+  navMeshDebugDraw: boolean;
+  navMeshDebugDrawOption: string;
+}>();
 
 export {
   signalEditor,
@@ -60,6 +68,7 @@ export {
   //
   signalDisplayModel,
   signalDebugDisplayOptions,
+  signalDebugDrawerControls,
   signGlbDisplayOptions,
   signalClippingPlanes,
 };
