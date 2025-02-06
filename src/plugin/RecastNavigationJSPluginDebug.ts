@@ -264,6 +264,7 @@ export class RecastNavigationJSPluginDebug {
       },
       {
         colors,
+        width: 0.4,
       }
     );
 
@@ -322,16 +323,10 @@ export class RecastNavigationJSPluginDebug {
         colors.push(r, g, b);
       }
     }
+    debugger;
 
-    // const normals: number[] = [];
-    // const indices = [0, 1, 2, 3, 4, 5];
     const vertexData = new VertexData();
-
-    // VertexData.ComputeNormals(positions, indices, normals);
-
     vertexData.positions = positions;
-    // vertexData.indices = indices;
-    // vertexData.normals = normals;
     vertexData.colors = colors;
 
     const customMesh = new Mesh("custom");

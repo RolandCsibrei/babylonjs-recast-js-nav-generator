@@ -108,7 +108,6 @@ export function drawDebug(
   option: DebugDrawerOptions,
   intermediates: GeneratorIntermediates
 ) {
-  debugger;
   debug.reset();
 
   const {

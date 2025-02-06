@@ -22,7 +22,9 @@ import {
   generateTileCache,
   generateTiledNavMesh,
   SoloNavMeshGeneratorConfig,
+  SoloNavMeshGeneratorIntermediates,
   TiledNavMeshGeneratorConfig,
+  TiledNavMeshGeneratorIntermediates,
 } from "recast-navigation/generators";
 import {
   Crowd,
@@ -189,7 +191,10 @@ export class RecastNavigationJSPlugin implements INavigationEnginePluginV2 {
    * the first navmesh created. We might extend this to support multiple navmeshes
    */
   public navMesh?: NavMesh;
-  public navMeshQuery!: NavMeshQuery;
+  public navMeshQuery!: NavMeshQuery; // TODO: !
+  public intermediates?:
+    | SoloNavMeshGeneratorIntermediates
+    | TiledNavMeshGeneratorIntermediates;
 
   private _maximumSubStepCount: number = 10;
   private _timeStep: number = 1 / 60;
@@ -557,8 +562,8 @@ export class RecastNavigationJSPlugin implements INavigationEnginePluginV2 {
       }
 
       this.navMesh = navMeshResult.navMesh;
-
       this.navMeshQuery = new NavMeshQuery(navMeshResult.navMesh);
+      this.intermediates = navMeshResult.intermediates;
     }
   }
 

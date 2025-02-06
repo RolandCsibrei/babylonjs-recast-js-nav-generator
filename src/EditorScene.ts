@@ -105,7 +105,6 @@ export class EditorScene {
 
     this._runRenderLoop();
 
-    // debugger;
     this.scene.onReadyObservable.addOnce(async () => {
       // ready
     });
@@ -228,7 +227,6 @@ export class EditorScene {
       if (!debug || !navMesh || !controls?.navMeshDebugDrawOption) {
         return;
       }
-      console.log(controls);
 
       drawDebug(
         debug,
@@ -570,13 +568,13 @@ export class EditorScene {
           debugNavMesh.dispose();
         }
 
-        debugger;
-
         this._navigation.createNavMesh(
           this._getMeshesForNavMeshCreation(),
           navMeshParams
         );
         signalNavMesh.value = this._navigation.navMesh ?? null;
+        signalGeneratorIntermediates.value =
+          this._navigation.intermediates ?? null;
 
         // generate the new debug navmesh
         debugNavMesh = this._navigation.createDebugNavMesh(this.scene);
@@ -599,6 +597,10 @@ export class EditorScene {
     // TODO: unsubscribe
     signalModelBlob.subscribe(async (blob) => {
       this._removeExistingModels();
+
+      if (!blob) {
+        return;
+      }
 
       let loaded: Nullable<ISceneLoaderAsyncResult> = null;
       if (blob instanceof Blob) {
