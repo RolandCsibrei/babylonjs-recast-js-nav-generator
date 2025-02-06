@@ -8,6 +8,10 @@
 
 `npm run dev`
 
+## Online version
+
+<https://nav-editor.babylonjs.xyz/>
+
 TODO:
 
 - [x] Add display options
