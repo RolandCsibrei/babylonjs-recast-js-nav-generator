@@ -18,3 +18,6 @@ TODO:
 - [ ] Add support to load a background model ???
 - [ ] Add various display options for the debug navmesh - debug drawer
 - [ ] Relative sizes of the agent mesh and line width to the model size
+- [ ] Obstacles
+- [ ] Support for signle thread, WASM and worker for nav mesh computation
+- [ ] Examples page
