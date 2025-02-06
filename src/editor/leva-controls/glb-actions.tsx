@@ -6,11 +6,13 @@ import { levaText } from "./leva-text";
 
 export const useGlbActionsControls = ({
   loadGlb,
-  loadDefault,
+  loadDefaultGlbSmall,
+  loadDefaultGlbBig,
   exportAsGlb,
 }: {
   loadGlb: () => void;
-  loadDefault: () => void;
+  loadDefaultGlbSmall: () => void;
+  loadDefaultGlbBig: () => void;
   exportAsGlb: () => void;
 }) => {
   useSignals();
@@ -21,7 +23,10 @@ export const useGlbActionsControls = ({
       "Load GLB": button(() => loadGlb(), {
         disabled: sigalnIsLoading.value,
       }),
-      "Load Default GLB": button(() => loadDefault(), {
+      "Load Default GLB - Small": button(() => loadDefaultGlbSmall(), {
+        disabled: sigalnIsLoading.value,
+      }),
+      "Load Default GLB - Big": button(() => loadDefaultGlbBig(), {
         disabled: sigalnIsLoading.value,
       }),
       "Export as GLTF": button(exportAsGlb, {

@@ -19,10 +19,10 @@ const FileLoader = () => {
   return (
     <input
       id="load-glb"
-      placeholder=""
       type="file"
       accept=".glb"
       onChange={handleFileChange}
+      style={{ display: "none" }}
     />
   );
 };

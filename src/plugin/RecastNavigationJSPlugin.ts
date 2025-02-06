@@ -54,6 +54,7 @@ export interface NavMeshParameters {
   detailSampleMaxError: number;
   tileSize: number;
   borderSize: number;
+  keepIntermediates?: boolean;
 }
 const _delta = new Vector3();
 const _moveTarget = new Vector3();
@@ -541,9 +542,15 @@ export class RecastNavigationJSPlugin implements INavigationEnginePluginV2 {
           ? generateTiledNavMesh(
               this._positions,
               this._indices,
-              config as TiledNavMeshGeneratorConfig
+              config as TiledNavMeshGeneratorConfig,
+              parameters.keepIntermediates
             )
-          : generateSoloNavMesh(this._positions, this._indices, config);
+          : generateSoloNavMesh(
+              this._positions,
+              this._indices,
+              config,
+              parameters.keepIntermediates
+            );
 
       if (!navMeshResult.success) {
         throw new Error(`Unable to generateSoloNavMesh:${navMeshResult.error}`);

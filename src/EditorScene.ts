@@ -29,8 +29,11 @@ import { exportNavMesh, init as initRecast } from "recast-navigation";
 
 import {
   AgentControls,
+  DefaultGlbSize,
   signalClippingPlanes,
   signalDebugDisplayOptions,
+  signalDebugDrawerControls,
+  signalGeneratorIntermediates,
   signalModelBlob,
   signalNavMesh,
   signalNavMeshParameters,
@@ -39,11 +42,17 @@ import {
   signalTestAgentTarget,
   signGlbDisplayOptions,
 } from "./editor/signals";
-import { loadDefaultGlb, loadModelFromBlob } from "./editor/scene-loader";
+import {
+  loadDefaultGlbBig,
+  loadDefaultGlbSmall,
+  loadModelFromBlob,
+} from "./editor/scene-loader";
 import { RecastNavigationJSPlugin } from "./plugin/RecastNavigationJSPlugin";
 import { hookInspector } from "./editor/inspector";
 import { setCameraLimits, zoomOnScene } from "./editor/camera";
 import { download } from "./download";
+import { RecastNavigationJSPluginDebug } from "./plugin/RecastNavigationJSPluginDebug";
+import { drawDebug } from "./editor/leva-controls/debug-drawer";
 
 export const MAIN_LIGHT_NAME = "main-light";
 const NAV_MESH_NAME = "nav-mesh";
@@ -53,12 +62,11 @@ export class EditorScene {
   private _scene: Scene;
   private _camera: ArcRotateCamera;
   private _ui: AdvancedDynamicTexture;
-  private _navigation!: RecastNavigationJSPlugin;
+  private _navigation?: RecastNavigationJSPlugin;
 
   private _debugNavMeshMaterial: StandardMaterial;
-  private _debugNavMesh!: Mesh; // TODO: move to hook
 
-  private _crowd!: ICrowd; // TODO: move to hook
+  private _crowd?: ICrowd;
   private _agent?: {
     idx: number;
     transform: TransformNode;
@@ -89,7 +97,7 @@ export class EditorScene {
   public async init() {
     await this._initNavigation();
 
-    await loadDefaultGlb();
+    await loadDefaultGlbSmall();
 
     this._subscribeSignals();
 
@@ -205,10 +213,30 @@ export class EditorScene {
     this._subscribeNavMeshParamaters();
     this._subscribeDisplayModel();
     this._subscribeDisplayOptions();
+    this._subscribeDebugDrawerControls();
     this._subscribeClipPlanes();
     this._subscribeTestAgent();
     this._subscribeTestAgentTargetPicker();
     this._subscribeAgentMovement();
+  }
+
+  private _subscribeDebugDrawerControls() {
+    const debug = new RecastNavigationJSPluginDebug();
+
+    signalDebugDrawerControls.subscribe((controls) => {
+      const navMesh = signalNavMesh.peek();
+      if (!debug || !navMesh || !controls?.navMeshDebugDrawOption) {
+        return;
+      }
+      console.log(controls);
+
+      drawDebug(
+        debug,
+        navMesh,
+        controls.navMeshDebugDrawOption,
+        signalGeneratorIntermediates.peek()
+      );
+    });
   }
 
   private _subscribeTestAgentTargetPicker() {
@@ -235,7 +263,7 @@ export class EditorScene {
 
   private _subscribeAgentMovement() {
     this._scene.onBeforeRenderObservable.add(() => {
-      if (!this._agent) {
+      if (!this._agent || !this._crowd) {
         {
           return;
         }
@@ -261,7 +289,7 @@ export class EditorScene {
     //
 
     signalTestAgentStart.subscribe((position) => {
-      if (!position || !this._agent) {
+      if (!position || !this._agent || !this.navigation || !this._crowd) {
         return;
       }
       const positionOnNavMesh = this.navigation.getClosestPoint(position);
@@ -273,7 +301,7 @@ export class EditorScene {
     const lineColor = Color3.Blue();
 
     signalTestAgentTarget.subscribe((position) => {
-      if (!position || !this._agent) {
+      if (!position || !this._agent || !this.navigation || !this._crowd) {
         return;
       }
 
@@ -309,7 +337,7 @@ export class EditorScene {
   }
 
   private _updateCrowdAgentParams(controls: AgentControls) {
-    if (!this._agent) {
+    if (!this._agent || !this._crowd) {
       return;
     }
 
@@ -527,8 +555,9 @@ export class EditorScene {
   }
 
   private _subscribeNavMeshParamaters() {
+    let debugNavMesh: Nullable<Mesh> = null;
     signalNavMeshParameters.subscribe(async (navMeshParams) => {
-      if (!navMeshParams) {
+      if (!navMeshParams || !this._navigation) {
         return;
       }
 
@@ -537,9 +566,11 @@ export class EditorScene {
         this._disposeCrowd();
 
         // remove the old debugnnav mesh if exists
-        if (this._debugNavMesh) {
-          this._debugNavMesh.dispose();
+        if (debugNavMesh) {
+          debugNavMesh.dispose();
         }
+
+        debugger;
 
         this._navigation.createNavMesh(
           this._getMeshesForNavMeshCreation(),
@@ -548,9 +579,9 @@ export class EditorScene {
         signalNavMesh.value = this._navigation.navMesh ?? null;
 
         // generate the new debug navmesh
-        this._debugNavMesh = this._navigation.createDebugNavMesh(this.scene);
-        this._debugNavMesh.name = NAV_MESH_NAME;
-        this._debugNavMesh.material = this._debugNavMeshMaterial;
+        debugNavMesh = this._navigation.createDebugNavMesh(this.scene);
+        debugNavMesh.name = NAV_MESH_NAME;
+        debugNavMesh.material = this._debugNavMeshMaterial;
       } catch (error) {
         console.error(error);
         signalNavMesh.value = null;
@@ -570,10 +601,14 @@ export class EditorScene {
       this._removeExistingModels();
 
       let loaded: Nullable<ISceneLoaderAsyncResult> = null;
-      if (blob) {
+      if (blob instanceof Blob) {
         loaded = await loadModelFromBlob(blob, "model.glb", this.scene);
       } else {
-        loaded = await loadDefaultGlb();
+        if (blob === DefaultGlbSize.Big) {
+          loaded = await loadDefaultGlbBig();
+        } else {
+          loaded = await loadDefaultGlbSmall();
+        }
       }
 
       loaded?.meshes.forEach((m) => (m.isPickable = false));
@@ -583,7 +618,7 @@ export class EditorScene {
   }
 
   public exportAsRecastNavMesh() {
-    if (!this.navigation.navMesh) {
+    if (!this.navigation?.navMesh) {
       return;
     }
     const navMeshExport = exportNavMesh(this.navigation.navMesh);

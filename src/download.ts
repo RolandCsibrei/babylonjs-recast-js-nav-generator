@@ -10,4 +10,6 @@ export const download = (data: BlobPart, type: string, filename: string) => {
   link.click();
 
   link.remove();
+
+  window.URL.revokeObjectURL(url);
 };

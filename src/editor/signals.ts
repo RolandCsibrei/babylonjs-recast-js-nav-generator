@@ -3,6 +3,12 @@ import { NavMeshParameters } from "../plugin/RecastNavigationJSPlugin";
 import { NavMesh } from "recast-navigation";
 import { Nullable } from "@babylonjs/core/types";
 import { EditorScene } from "../EditorScene";
+import {
+  SoloNavMeshGeneratorIntermediates,
+  TileCacheGeneratorIntermediates,
+  TiledNavMeshGeneratorIntermediates,
+} from "recast-navigation/generators";
+import { DebugDrawerOptions } from "./leva-controls/debug-drawer";
 
 export type AgentControls = {
   agentEnabled: boolean;
@@ -11,13 +17,23 @@ export type AgentControls = {
   agentMaxAcceleration: number;
   agentMaxSpeed: number;
 };
+export type GeneratorIntermediates =
+  | SoloNavMeshGeneratorIntermediates
+  | TiledNavMeshGeneratorIntermediates
+  | TileCacheGeneratorIntermediates
+  | null;
 
 type XYZ = { x: number; y: number; z: number };
+
+export enum DefaultGlbSize {
+  Small = "s",
+  Big = "b",
+}
 
 const sigalnIsLoading = signal(false);
 
 const signalEditor = signal<EditorScene>();
-const signalModelBlob = signal<Blob | null>(null);
+const signalModelBlob = signal<Blob | null | DefaultGlbSize>(null);
 const signalIsInspectorOpen = signal(false);
 const signalNavMeshParameters = signal<NavMeshParameters>();
 const signalNavMesh = signal<Nullable<NavMesh>>(null);
@@ -49,8 +65,10 @@ const signalClippingPlanes = signal<
 
 const signalDebugDrawerControls = signal<{
   navMeshDebugDraw: boolean;
-  navMeshDebugDrawOption: string;
+  navMeshDebugDrawOption: DebugDrawerOptions;
 }>();
+
+const signalGeneratorIntermediates = signal<GeneratorIntermediates>(null);
 
 export {
   signalEditor,
@@ -69,6 +87,7 @@ export {
   signalDisplayModel,
   signalDebugDisplayOptions,
   signalDebugDrawerControls,
+  signalGeneratorIntermediates,
   signGlbDisplayOptions,
   signalClippingPlanes,
 };

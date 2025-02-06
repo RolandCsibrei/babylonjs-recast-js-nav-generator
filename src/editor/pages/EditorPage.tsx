@@ -1,6 +1,7 @@
 import { Leva } from "leva";
 import { useGlbActionsControls } from "../leva-controls/glb-actions";
 import {
+  DefaultGlbSize,
   signalEditor,
   signalModelBlob,
   signalNavMeshParameters,
@@ -24,8 +25,12 @@ export function EditorPage() {
     document.getElementById("load-glb")?.click();
   };
 
-  const loadDefault = () => {
-    signalModelBlob.value = null;
+  const loadDefaultGlbSmall = () => {
+    signalModelBlob.value = DefaultGlbSize.Small;
+  };
+
+  const loadDefaultGlbBig = () => {
+    signalModelBlob.value = DefaultGlbSize.Big;
   };
 
   const exportAsGlb = () => {
@@ -39,7 +44,8 @@ export function EditorPage() {
   // Leva controls
   useGlbActionsControls({
     loadGlb,
-    loadDefault,
+    loadDefaultGlbSmall,
+    loadDefaultGlbBig,
     exportAsGlb,
   });
 

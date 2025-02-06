@@ -26,6 +26,10 @@ export async function loadModelFromBlob(
   return null;
 }
 
-export async function loadDefaultGlb() {
+export async function loadDefaultGlbSmall() {
   return await SceneLoader.ImportMeshAsync("", "/model/", "dungeon.glb");
+}
+
+export async function loadDefaultGlbBig() {
+  return await SceneLoader.ImportMeshAsync("", "/model/", "navmesh-test.glb");
 }
