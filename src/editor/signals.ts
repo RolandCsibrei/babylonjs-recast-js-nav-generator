@@ -1,9 +1,8 @@
 import { signal } from "@preact/signals-core";
-import { NavMeshParameters } from "./plugin/RecastNavigationJSPlugin";
+import { NavMeshParameters } from "../plugin/RecastNavigationJSPlugin";
 import { NavMesh } from "recast-navigation";
 import { Nullable } from "@babylonjs/core/types";
 import { EditorScene } from "../EditorScene";
-import { DebugDrawerOption } from "./leva-controls/debug-drawer";
 
 export type AgentControls = {
   agentEnabled: boolean;
@@ -27,6 +26,7 @@ const signalDisplayModel = signal(true);
 
 const signGlbDisplayOptions = signal<{
   displayModel: boolean;
+  displayGround: boolean;
 }>();
 
 const signalDebugDisplayOptions = signal<{

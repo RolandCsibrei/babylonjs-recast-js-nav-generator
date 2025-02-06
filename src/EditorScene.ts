@@ -23,13 +23,13 @@ import { loadDefaultGlb, loadModelFromBlob } from "./editor/scene-loader";
 
 import { exportNavMesh, init as initRecast } from "recast-navigation";
 
-import { RecastNavigationJSPlugin } from "./editor/plugin/RecastNavigationJSPlugin";
+import { RecastNavigationJSPlugin } from "./plugin/RecastNavigationJSPlugin";
 import { hookInspector } from "./editor/inspector";
 
 import { download } from "./download";
 import { StandardMaterial } from "@babylonjs/core/Materials/standardMaterial";
 import { CreateGround } from "@babylonjs/core/Meshes/Builders/groundBuilder";
-import { Color3 } from "@babylonjs/core/Maths/math.color";
+import { Color3, Color4 } from "@babylonjs/core/Maths/math.color";
 import { CreatePlane } from "@babylonjs/core/Meshes/Builders/planeBuilder";
 import { Plane } from "@babylonjs/core/Maths/math.plane";
 import { UtilityLayerRenderer } from "@babylonjs/core/Rendering/utilityLayerRenderer";
@@ -58,9 +58,10 @@ export class EditorScene {
   private _camera: ArcRotateCamera;
   private _ui: AdvancedDynamicTexture;
   private _navigation!: RecastNavigationJSPlugin;
-  private _debugNavMeshMaterial: StandardMaterial;
 
+  private _debugNavMeshMaterial: StandardMaterial;
   private _debugNavMesh!: Mesh; // TODO: move to hook
+
   private _crowd!: ICrowd; // TODO: move to hook
   private _agent?: {
     idx: number;
@@ -80,6 +81,8 @@ export class EditorScene {
       throw new Error("Unable to create babylon.js scene!");
     }
 
+    scene.clearColor = new Color4(0.1, 0.1, 0.1, 1);
+
     this._engine = engine;
     this._scene = scene;
     this._camera = camera;
@@ -92,9 +95,8 @@ export class EditorScene {
 
     await loadDefaultGlb();
 
-    this._hookSignals();
+    this._subscribeSignals();
 
-    // this._createGround();
     zoomOnScene(this.scene, this.camera);
 
     this._runRenderLoop();
@@ -174,6 +176,10 @@ export class EditorScene {
     groundMaterial.lineColor = new Color3(0.1, 0.1, 0.1);
     groundMaterial.mainColor = new Color3(0.25, 0.25, 0.25);
     groundMesh.material = groundMaterial;
+    groundMaterial.backFaceCulling = false;
+    groundMesh.position.y = -0.01;
+    groundMesh.visibility = 0.8;
+    return groundMesh;
   }
 
   private _createDebugNavMeshMaterial() {
@@ -196,20 +202,20 @@ export class EditorScene {
     }
   }
 
-  private _hookSignals() {
+  private _subscribeSignals() {
     hookInspector(this.scene);
 
-    this._hookModelBlob();
-    this._hookNavMeshParamaters();
-    this._hookDisplayModel();
-    this._hookDisplayOptions();
-    this._hookClipPlanes();
-    this._hookTestAgent();
-    this._hookTestAgentTargetPicker();
-    this._hookAgentMovement();
+    this._subscribeModelBlob();
+    this._subscribeNavMeshParamaters();
+    this._subscribeDisplayModel();
+    this._subscribeDisplayOptions();
+    this._subscribeClipPlanes();
+    this._subscribeTestAgent();
+    this._subscribeTestAgentTargetPicker();
+    this._subscribeAgentMovement();
   }
 
-  private _hookTestAgentTargetPicker() {
+  private _subscribeTestAgentTargetPicker() {
     const pointerEventTypes = [PointerEventTypes.POINTERUP];
     // TODO: unreg
     const obersvable = this.scene.onPointerObservable.add((pi: PointerInfo) => {
@@ -231,7 +237,7 @@ export class EditorScene {
     });
   }
 
-  private _hookAgentMovement() {
+  private _subscribeAgentMovement() {
     this._scene.onBeforeRenderObservable.add(() => {
       if (!this._agent) {
         {
@@ -247,7 +253,7 @@ export class EditorScene {
     });
   }
 
-  private _hookTestAgent() {
+  private _subscribeTestAgent() {
     signalTestAgentControls.subscribe((controls) => {
       if (!controls || !signalNavMesh.value) {
         return;
@@ -255,6 +261,8 @@ export class EditorScene {
 
       this._createCrowdAndAgent(controls);
     });
+
+    //
 
     signalTestAgentStart.subscribe((position) => {
       if (!position || !this._agent) {
@@ -264,10 +272,15 @@ export class EditorScene {
       this._crowd.agentTeleport(this._agent?.idx, positionOnNavMesh);
     });
 
+    //
+
+    const lineColor = Color3.Blue();
+
     signalTestAgentTarget.subscribe((position) => {
       if (!position || !this._agent) {
         return;
       }
+
       const targetOnNavMesh = this.navigation.getClosestPoint(position);
       this._crowd.agentGoto(this._agent?.idx, targetOnNavMesh);
 
@@ -284,7 +297,7 @@ export class EditorScene {
           points: pathPoints,
         },
         {
-          color: Color3.Blue(),
+          color: lineColor,
           width: 0.2,
         }
       );
@@ -299,8 +312,37 @@ export class EditorScene {
     }
   }
 
+  private _updateCrowdAgentParams(controls: AgentControls) {
+    if (!this._agent) {
+      return;
+    }
+
+    this._crowd.updateAgentParameters(
+      this._agent.idx,
+      this._agentControlsToAgentParameters(controls)
+    );
+  }
+
+  private _agentControlsToAgentParameters(controls: AgentControls) {
+    return {
+      radius: controls.agentRadius, // Agent radius, controls how close it can get to obstacles
+      height: controls.agentHeight, // Agent height
+      maxSpeed: controls.agentMaxSpeed, // Agent speed
+      maxAcceleration: controls.agentMaxAcceleration, // Maximum acceleration
+      collisionQueryRange: controls.agentRadius * 2, // How far the agent will look ahead for collisions
+      pathOptimizationRange: controls.agentRadius * 3, // Range for path optimization
+      separationWeight: 4.0, // Avoidance behavior separation weight
+      obstacleAvoidanceType: 3, // High quality avoidance
+    };
+  }
+
   private _createCrowdAndAgent(controls: AgentControls) {
     if (!this._navigation) {
+      return;
+    }
+
+    if (this._agent) {
+      this._updateCrowdAgentParams(controls);
       return;
     }
 
@@ -312,38 +354,30 @@ export class EditorScene {
 
     this._crowd = crowd;
 
-    const agentParams = {
-      radius: controls.agentRadius, // Agent radius, controls how close it can get to obstacles
-      height: controls.agentHeight, // Agent height
-      maxSpeed: controls.agentMaxSpeed, // Agent speed
-      maxAcceleration: controls.agentMaxAcceleration, // Maximum acceleration
-      collisionQueryRange: controls.agentRadius * 2, // How far the agent will look ahead for collisions
-      pathOptimizationRange: controls.agentRadius * 3, // Range for path optimization
-      separationWeight: 4.0, // Avoidance behavior separation weight
-      obstacleAvoidanceType: 3, // High quality avoidance
-    };
-
-    const targetCube = CreateBox(
-      "target-cube",
-      { size: 0.1, height: 0.1 },
-      this._scene
-    );
+    // const targetCube = CreateBox(
+    //   "target-cube",
+    //   { size: 0.1, height: 0.1 },
+    //   this._scene
+    // );
 
     // create agents
+    const height = 2;
     const singleAgentMesh = CreateCapsule(
       "single-agent",
-      { height: 4, radius: 0.3 },
+      { height, radius: 0.3 },
       this._scene
     );
+    singleAgentMesh.position.y = height / 2;
 
     const matAgent = new StandardMaterial("agent", this._scene);
-    const variation = Math.random();
 
-    matAgent.diffuseColor = new Color3(
-      0.4 + variation * 0.6,
-      0.3,
-      1.0 - variation * 0.3
-    );
+    // const variation = Math.random();
+    // matAgent.diffuseColor = new Color3(
+    //   0.4 + variation * 0.6,
+    //   0.3,
+    //   1.0 - variation * 0.3
+    // );
+    matAgent.diffuseColor = Color3.Red();
     singleAgentMesh.material = matAgent;
 
     const randomPos = this._navigation.getClosestPoint(new Vector3(-20, 0, 0));
@@ -351,7 +385,11 @@ export class EditorScene {
     const transform = new TransformNode("agent-parent");
     singleAgentMesh.parent = transform;
 
-    const agentIndex = crowd.addAgent(randomPos, agentParams, transform);
+    const agentIndex = crowd.addAgent(
+      randomPos,
+      this._agentControlsToAgentParameters(controls),
+      transform
+    );
     this._agent = {
       idx: agentIndex,
       transform: transform,
@@ -360,7 +398,7 @@ export class EditorScene {
     };
   }
 
-  private _hookClipPlanes() {
+  private _subscribeClipPlanes() {
     const utilLayer = new UtilityLayerRenderer(this.scene);
     // const rootBB = root.getHierarchyBoundingVectors(true);
 
@@ -459,16 +497,25 @@ export class EditorScene {
     });
   }
 
-  private _hookDisplayModel() {
+  private _subscribeDisplayModel() {
+    const groundMesh = this._createGround();
+
     signGlbDisplayOptions.subscribe((options) => {
+      if (!options) {
+        return;
+      }
+
       const roots = this.scene.meshes.filter((m) => m.name === "__root__");
       for (const m of roots) {
-        m.setEnabled(options?.displayModel ?? false);
+        m.setEnabled(options.displayModel);
       }
+
+      //
+      groundMesh.setEnabled(options.displayGround);
     });
   }
 
-  private _hookDisplayOptions() {
+  private _subscribeDisplayOptions() {
     signalDebugDisplayOptions.subscribe((options) => {
       if (!options) {
         return;
@@ -483,7 +530,7 @@ export class EditorScene {
     });
   }
 
-  private _hookNavMeshParamaters() {
+  private _subscribeNavMeshParamaters() {
     signalNavMeshParameters.subscribe(async (navMeshParams) => {
       if (!navMeshParams) {
         return;
@@ -491,15 +538,17 @@ export class EditorScene {
 
       // generate the navmesh
       try {
+        this._disposeCrowd();
+
         // remove the old debugnnav mesh if exists
         if (this._debugNavMesh) {
           this._debugNavMesh.dispose();
         }
 
-        const meshes = this.scene.meshes.filter(
-          (m) => m.parent?.name === "__root__"
-        ) as Mesh[];
-        this._navigation.createNavMesh(meshes, navMeshParams);
+        this._navigation.createNavMesh(
+          this._getMeshesForNavMeshCreation(),
+          navMeshParams
+        );
         signalNavMesh.value = this._navigation.navMesh ?? null;
 
         // generate the new debug navmesh
@@ -513,7 +562,13 @@ export class EditorScene {
     });
   }
 
-  private _hookModelBlob() {
+  private _getMeshesForNavMeshCreation() {
+    return this.scene.meshes.filter(
+      (m) => m.parent?.name === "__root__"
+    ) as Mesh[];
+  }
+
+  private _subscribeModelBlob() {
     // TODO: unsubscribe
     signalModelBlob.subscribe(async (blob) => {
       this._removeExistingModels();

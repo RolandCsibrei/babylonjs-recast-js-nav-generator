@@ -7,9 +7,9 @@ export const useGlbDisplayOptionsControls = () => {
       label: "Show Model",
       value: true,
     },
+    displayGround: {
+      label: "Show Ground",
+      value: true,
+    },
   });
-
-  return {
-    // displayModel,
-  };
 };
