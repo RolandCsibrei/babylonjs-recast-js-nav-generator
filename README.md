@@ -23,3 +23,5 @@ TODO:
 - [ ] Support for signle thread, WASM and worker for nav mesh computation
 - [ ] Place the ground always at minY
 - [ ] Examples page
+
+This project is a port of <https://github.com/isaac-mason/recast-navigation-js/tree/main/apps/navmesh-website> and uses some code from this repo. Thank you Isaac Mason for your excelent work!

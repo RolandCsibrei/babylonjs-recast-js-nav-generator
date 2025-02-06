@@ -330,6 +330,7 @@ export class RecastNavigationJSPluginDebug {
     vertexData.colors = colors;
 
     const customMesh = new Mesh("custom");
+    customMesh.isUnIndexed = true;
     vertexData.applyToMesh(customMesh);
 
     customMesh.material = this.triMaterial;
