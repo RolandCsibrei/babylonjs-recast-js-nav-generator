@@ -3,7 +3,7 @@ import { useEffect } from "react";
 
 import { EditorPage } from "./pages/EditorPage";
 import FileLoader from "./components/FileLoader";
-import { EditorScene } from "./EditorScene";
+import { EditorScene } from "./scenes/EditorScene";
 
 import { signalEditor } from "./state/signals";
 

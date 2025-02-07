@@ -23,6 +23,8 @@ export const useGlbControls = ({
       "Load GLB": button(() => loadGlb(), {
         disabled: sigalnIsLoading.value,
       }),
+      _1: levaText("Or drag and drop to load.GLB/GLTF supported."),
+
       "Load Default GLB - Small": button(() => loadDefaultGlbSmall(), {
         disabled: sigalnIsLoading.value,
       }),

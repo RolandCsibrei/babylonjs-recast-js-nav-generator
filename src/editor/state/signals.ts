@@ -10,7 +10,7 @@ import {
 import { NavMeshParameters } from "../../plugin/RecastNavigationJSPlugin";
 import { DebugDrawerOptions } from "../../plugin/debug-drawer";
 
-import { EditorScene } from "../EditorScene";
+import { EditorScene } from "../scenes/EditorScene";
 
 export type AgentControls = {
   agentEnabled: boolean;
