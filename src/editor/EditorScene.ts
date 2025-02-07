@@ -36,7 +36,7 @@ import {
   signalDebugDisplayOptions,
   signalDebugDrawerControls,
   signalGeneratorIntermediates,
-  signalIndexedTriangleInputMesh,
+  signalIndexedTriangleInputMeshData,
   signalModelBlob,
   signalNavMesh,
   signalNavMeshParameters,
@@ -220,7 +220,7 @@ export class EditorScene {
     this._createDragAndDropLoader();
     this._subscribeModelBlob();
     this._subscribeNavMeshParamaters();
-    this._subscribeIndexedGTriangleInputMesh();
+    this._subscribeIndexedGTriangleInputMeshData();
     this._subscribeDisplayModel();
     this._subscribeDisplayOptions();
     this._subscribeDebugDrawerControls();
@@ -437,7 +437,12 @@ export class EditorScene {
 
   private _subscribeClipPlanes() {
     const utilLayer = new UtilityLayerRenderer(this._scene);
-    // const rootBB = root.getHierarchyBoundingVectors(true);
+
+    // const root = signalIndexedTriangleInputMesh.value
+    // if (root) {
+
+    //   const rootBB = root.getHierarchyBoundingVectors(true);
+    // }
 
     //
 
@@ -591,7 +596,7 @@ export class EditorScene {
           navMeshParams
         );
 
-        signalIndexedTriangleInputMesh.value = {
+        signalIndexedTriangleInputMeshData.value = {
           positions: this._navigation.positions,
           indices: this._navigation.indices,
         };
@@ -615,8 +620,8 @@ export class EditorScene {
     });
   }
 
-  private _subscribeIndexedGTriangleInputMesh() {
-    signalIndexedTriangleInputMesh.subscribe((data) => {
+  private _subscribeIndexedGTriangleInputMeshData() {
+    signalIndexedTriangleInputMeshData.subscribe((data) => {
       if (this._navMeshGeneratorInputMesh) {
         this._navMeshGeneratorInputMesh.dispose();
       }

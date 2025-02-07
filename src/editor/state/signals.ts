@@ -74,7 +74,7 @@ const signalDebugDrawerControls = signal<{
 
 const signalGeneratorIntermediates = signal<GeneratorIntermediates>(null);
 
-const signalIndexedTriangleInputMesh = signal<{
+const signalIndexedTriangleInputMeshData = signal<{
   positions: Float32Array | null;
   indices: Uint32Array | null;
 } | null>(null);
@@ -97,7 +97,7 @@ export {
   signalDebugDisplayOptions,
   signalDebugDrawerControls,
   signalGeneratorIntermediates,
-  signalIndexedTriangleInputMesh,
+  signalIndexedTriangleInputMeshData,
   signGlbDisplayOptions,
   signalClippingPlanes,
 };
