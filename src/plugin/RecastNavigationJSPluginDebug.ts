@@ -26,18 +26,6 @@ export type DebugDrawerParams = {
   lineMaterial?: StandardMaterial;
 };
 
-// type VertexDataCustom = [
-//   x: number,
-//   y: number,
-//   z: number,
-//   r: number,
-//   g: number,
-//   b: number,
-//   a: number
-// ];
-
-// const _color = new Color3();
-
 export class RecastNavigationJSPluginDebug {
   triMaterial: StandardMaterial;
 
@@ -45,11 +33,6 @@ export class RecastNavigationJSPluginDebug {
   pointMesh = CreateSphere("point", { diameter: 0.02, segments: 8 });
 
   lineMaterial: StandardMaterial;
-
-  // private debugDrawImpl: InstanceType<typeof Raw.Module.DebugDrawImpl>;
-
-  // private currentVertices: VertexDataCustom[] = [];
-  // private currentPrimitive = 0;
 
   private _parent = new TransformNode("debugDrawerParent");
 
@@ -68,6 +51,7 @@ export class RecastNavigationJSPluginDebug {
     this.lineMaterial =
       materials?.lineMaterial ?? new StandardMaterial("lineMaterial");
   }
+
   drawPrimitives(primitives: DebugDrawerPrimitive[]) {
     for (const primitive of primitives) {
       switch (primitive.type) {
@@ -86,6 +70,7 @@ export class RecastNavigationJSPluginDebug {
       }
     }
   }
+
   drawHeightfieldSolid(hf: RecastHeightfield): void {
     const primitives = this.debugDrawerUtils.drawHeightfieldSolid(hf);
     this.drawPrimitives(primitives);
@@ -212,15 +197,6 @@ export class RecastNavigationJSPluginDebug {
     this.lineMaterial.dispose();
   }
 
-  // private vertex(x: number, y: number, z: number, color: number) {
-  //   const r = ((color >> 16) & 0xff) / 255;
-  //   const g = ((color >> 8) & 0xff) / 255;
-  //   const b = (color & 0xff) / 255;
-  //   const a = ((color >> 24) & 0xff) / 255;
-
-  //   this.currentVertices.push([x, y, z, r, g, b, a]);
-  // }
-
   private drawPoints(primitive: DebugDrawerPrimitive): void {
     const matricesData = new Float32Array(16 * primitive.vertices.length);
     const colorData = new Float32Array(4 * primitive.vertices.length);
@@ -281,24 +257,19 @@ export class RecastNavigationJSPluginDebug {
       positions[i * 3 + 1] = y;
       positions[i * 3 + 2] = z;
 
-      colors[i * 3 + 0] = r;
-      colors[i * 3 + 1] = g;
-      colors[i * 3 + 2] = b;
-      colors[i * 3 + 3] = 1;
+      colors[i * 4 + 0] = r;
+      colors[i * 4 + 1] = g;
+      colors[i * 4 + 2] = b;
+      colors[i * 4 + 3] = 1;
     }
 
-    // const normals: number[] = [];
-    // const indices = [0, 1, 2, 3, 4, 5];
     const vertexData = new VertexData();
 
-    // VertexData.ComputeNormals(positions, indices, normals);
-
     vertexData.positions = positions;
-    // vertexData.indices = indices;
-    // vertexData.normals = normals;
     vertexData.colors = colors;
 
     const customMesh = new Mesh("custom");
+    customMesh.isUnIndexed = true;
     vertexData.applyToMesh(customMesh);
 
     customMesh.material = this.triMaterial;
@@ -320,10 +291,9 @@ export class RecastNavigationJSPluginDebug {
       ];
       for (const [x, y, z, r, g, b] of vertices) {
         positions.push(x, y, z);
-        colors.push(r, g, b);
+        colors.push(r, g, b, 1);
       }
     }
-    debugger;
 
     const vertexData = new VertexData();
     vertexData.positions = positions;
