@@ -1,6 +1,6 @@
 import { useControls } from "leva";
-import { levaText } from "./leva-text";
-import { signalTestAgentControls } from "../signals";
+import { signalTestAgentControls } from "../state/signals";
+import { levaText } from "./plugins/leva-text";
 
 export const useTestAgentControls = () => {
   signalTestAgentControls.value = useControls("Test Agent", {

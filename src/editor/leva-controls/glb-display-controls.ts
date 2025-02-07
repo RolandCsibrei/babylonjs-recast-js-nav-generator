@@ -1,7 +1,7 @@
 import { useControls } from "leva";
-import { signGlbDisplayOptions } from "../signals";
+import { signGlbDisplayOptions } from "../state/signals";
 
-export const useGlbDisplayOptionsControls = () => {
+export const useGlbDisplayControls = () => {
   signGlbDisplayOptions.value = useControls("Display Options.Model", {
     displayModel: {
       label: "Show Model",
@@ -9,7 +9,7 @@ export const useGlbDisplayOptionsControls = () => {
     },
     displayGround: {
       label: "Show Ground",
-      value: true,
+      value: false,
     },
   });
 };

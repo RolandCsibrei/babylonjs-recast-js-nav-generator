@@ -21,11 +21,11 @@ TODO:
 - [x] Add moveable clipping planes to clip the model/navmesh for better view of complicated models
 - [ ] Add drag and drop support to load the model
 - [ ] Add support to load a background model ???
-- [ ] Add various display options for the debug navmesh - debug drawer
+- [x] Add various display options for the debug navmesh - debug drawer
 - [ ] Relative sizes of the agent mesh and line width to the model size
 - [ ] Obstacles
-- [ ] Support for signle thread, WASM and worker for nav mesh computation
+- [ ] Support for single thread, WASM and worker for nav mesh computation
 - [ ] Place the ground always at minY
 - [ ] Examples page
 
-This project is a port of <https://github.com/isaac-mason/recast-navigation-js/tree/main/apps/navmesh-website> and uses some code from this repo. Thank you Isaac Mason for your excelent work!
+This project is a port of <https://github.com/isaac-mason/recast-navigation-js/tree/main/apps/navmesh-website> and uses code from this repo. Thank you Isaac Mason for your excelent work!

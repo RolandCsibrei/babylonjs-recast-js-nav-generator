@@ -17,7 +17,6 @@ export type DebugDrawerOptions =
 
 import {
   NavMesh,
-  // NavMesh,
   RecastCompactHeightfield,
   RecastContourSet,
   RecastHeightfield,
@@ -25,8 +24,8 @@ import {
   RecastPolyMeshDetail,
 } from "recast-navigation";
 
-import { RecastNavigationJSPluginDebug } from "../../plugin/RecastNavigationJSPluginDebug";
-import { GeneratorIntermediates } from "../signals";
+import { RecastNavigationJSPluginDebug } from "./RecastNavigationJSPluginDebug";
+import { GeneratorIntermediates } from "../editor/state/signals";
 
 const getIntermediates = (intermediates: GeneratorIntermediates) => {
   const heightfieldList: RecastHeightfield[] = [];
@@ -103,8 +102,6 @@ const getIntermediates = (intermediates: GeneratorIntermediates) => {
 export function drawDebug(
   debug: RecastNavigationJSPluginDebug,
   navMesh: NavMesh,
-  // option: keyof typeof DebugDrawerOption,
-  // option: string,
   option: DebugDrawerOptions,
   intermediates: GeneratorIntermediates
 ) {

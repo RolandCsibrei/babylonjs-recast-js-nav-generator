@@ -1,3 +1,5 @@
+import { TAG_MODEL } from "./tags";
+
 import { CubicEase, EasingFunction } from "@babylonjs/core/Animations/easing";
 import { ArcRotateCamera } from "@babylonjs/core/Cameras/arcRotateCamera";
 import { IVector3Like } from "@babylonjs/core/Maths/math.like";
@@ -49,15 +51,14 @@ export interface CameraValues {
 }
 
 export function zoomOnScene(scene: Scene, camera: ArcRotateCamera) {
-  camera.zoomOn(
-    // TODO: refactor this
-    scene.meshes.filter(
-      (m) =>
-        m.name !== "ground" &&
-        m.name !== "clip-plane-1" &&
-        m.name !== "clip-plane-2"
-    )
-  );
+  camera.zoomOn(scene.getMeshesByTags(TAG_MODEL));
+
+  moveCamera(scene, camera, {
+    radius: camera.radius,
+    alpha: 0.56,
+    beta: 1.2,
+    target: camera.target,
+  });
 }
 
 export function moveCamera(

@@ -1,19 +1,22 @@
+import { useSignals } from "@preact/signals-react/runtime";
+
 import { Leva } from "leva";
-import { useGlbActionsControls } from "../leva-controls/glb-actions";
+import { useGlbControls } from "../leva-controls/glb-controls";
+import { useNavMeshControls } from "../leva-controls/nav-mesh-controls";
+import { useNavMeshGenerationParametersControls } from "../leva-controls/nav-mesh-generation-parameters-controls";
+import { useDebugDisplayControls } from "../leva-controls/debug-display-controls";
+import { useGlbDisplayControls } from "../leva-controls/glb-display-controls";
+import { useClipPlaneControls } from "../leva-controls/clip-planes-controls";
+import { useTestAgentControls } from "../leva-controls/test-agent-controls";
+import { useDebugDrawerControls } from "../leva-controls/debug-drawer-controls";
+
 import {
   DefaultGlbSize,
   signalEditor,
   signalModelBlob,
   signalNavMeshParameters,
-} from "../signals";
-import { useNavMeshActionsControls } from "../leva-controls/navmesh-actions";
-import { useSignals } from "@preact/signals-react/runtime";
-import { useNavMeshGenerationControls } from "../leva-controls/navmesh-config";
-import { useDebugDisplayOptionsControls } from "../leva-controls/debug-display-options";
-import { useGlbDisplayOptionsControls } from "../leva-controls/glb-display-options";
-import { useCliPlaneOptionsControls } from "../leva-controls/clipping-planes-options";
-import { useTestAgentControls } from "../leva-controls/agent-display-options";
-import { useDebugDrawerControls } from "../leva-controls/debug-draw-controls";
+} from "../state/signals";
+
 export function EditorPage() {
   useSignals();
 
@@ -42,25 +45,25 @@ export function EditorPage() {
   };
 
   // Leva controls
-  useGlbActionsControls({
+  useGlbControls({
     loadGlb,
     loadDefaultGlbSmall,
     loadDefaultGlbBig,
     exportAsGlb,
   });
 
-  useNavMeshActionsControls({
+  useNavMeshControls({
     generateNavMesh,
     exportAsRecastNavMesh,
   });
 
-  useGlbDisplayOptionsControls();
-  useDebugDisplayOptionsControls();
+  useGlbDisplayControls();
+  useDebugDisplayControls();
   useDebugDrawerControls();
-  const { navMeshConfig } = useNavMeshGenerationControls();
+  const { navMeshConfig } = useNavMeshGenerationParametersControls();
   useTestAgentControls();
 
-  useCliPlaneOptionsControls();
+  useClipPlaneControls();
 
   return (
     <Leva

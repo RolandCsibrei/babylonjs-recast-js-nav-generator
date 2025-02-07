@@ -1,9 +1,9 @@
 import { button, useControls } from "leva";
 import { useSignals } from "@preact/signals-react/runtime";
 
-import { sigalnIsLoading, signalNavMesh } from "../signals";
+import { sigalnIsLoading, signalNavMesh } from "../state/signals";
 
-export const useNavMeshActionsControls = ({
+export const useNavMeshControls = ({
   generateNavMesh,
   exportAsRecastNavMesh,
 }: {

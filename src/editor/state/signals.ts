@@ -1,14 +1,16 @@
 import { signal } from "@preact/signals-core";
-import { NavMeshParameters } from "../plugin/RecastNavigationJSPlugin";
+
 import { NavMesh } from "recast-navigation";
-import { Nullable } from "@babylonjs/core/types";
-import { EditorScene } from "../EditorScene";
 import {
   SoloNavMeshGeneratorIntermediates,
   TileCacheGeneratorIntermediates,
   TiledNavMeshGeneratorIntermediates,
 } from "recast-navigation/generators";
-import { DebugDrawerOptions } from "./leva-controls/debug-drawer";
+
+import { NavMeshParameters } from "../../plugin/RecastNavigationJSPlugin";
+import { DebugDrawerOptions } from "../../plugin/debug-drawer";
+
+import { EditorScene } from "../EditorScene";
 
 export type AgentControls = {
   agentEnabled: boolean;
@@ -17,28 +19,30 @@ export type AgentControls = {
   agentMaxAcceleration: number;
   agentMaxSpeed: number;
 };
+
 export type GeneratorIntermediates =
   | SoloNavMeshGeneratorIntermediates
   | TiledNavMeshGeneratorIntermediates
   | TileCacheGeneratorIntermediates
   | null;
 
-type XYZ = { x: number; y: number; z: number };
-
 export enum DefaultGlbSize {
   Small = "s",
   Big = "b",
 }
 
+type XYZ = { x: number; y: number; z: number };
+
 const sigalnIsLoading = signal(false);
+const signalIsInspectorOpen = signal(false);
 
 const signalEditor = signal<EditorScene>();
 const signalModelBlob = signal<Blob | null | DefaultGlbSize>(null);
-const signalIsInspectorOpen = signal(false);
-const signalNavMeshParameters = signal<NavMeshParameters>();
-const signalNavMesh = signal<Nullable<NavMesh>>(null);
 
-const signalDisplayModel = signal(true);
+const signalNavMeshParameters = signal<NavMeshParameters>();
+const signalNavMesh = signal<NavMesh | null>(null);
+
+const signalDisplayModel = signal(true); // TODO: refactor
 
 const signGlbDisplayOptions = signal<{
   displayModel: boolean;
@@ -70,6 +74,11 @@ const signalDebugDrawerControls = signal<{
 
 const signalGeneratorIntermediates = signal<GeneratorIntermediates>(null);
 
+const signalIndexedTriangleInputMesh = signal<{
+  positions: Float32Array | null;
+  indices: Uint32Array | null;
+} | null>(null);
+
 export {
   signalEditor,
   sigalnIsLoading,
@@ -88,6 +97,7 @@ export {
   signalDebugDisplayOptions,
   signalDebugDrawerControls,
   signalGeneratorIntermediates,
+  signalIndexedTriangleInputMesh,
   signGlbDisplayOptions,
   signalClippingPlanes,
 };

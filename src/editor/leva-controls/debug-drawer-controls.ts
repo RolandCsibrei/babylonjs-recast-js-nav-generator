@@ -1,7 +1,7 @@
 import { useControls } from "leva";
-import { levaText } from "./leva-text";
-import { DebugDrawerOption } from "./debug-drawer";
-import { signalDebugDrawerControls } from "../signals";
+import { DebugDrawerOption } from "../../plugin/debug-drawer";
+import { signalDebugDrawerControls } from "../state/signals";
+import { levaText } from "./plugins/leva-text";
 
 export const useDebugDrawerControls = () => {
   signalDebugDrawerControls.value = useControls("Display Options.NavMesh", {

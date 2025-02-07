@@ -20,6 +20,8 @@ import {
   RecastPolyMeshDetail,
 } from "recast-navigation";
 
+export const NAV_MESH_DEBUG_NAME = "nav-mesh-debug";
+
 export type DebugDrawerParams = {
   triMaterial?: StandardMaterial;
   pointMaterial?: StandardMaterial;
@@ -40,16 +42,19 @@ export class RecastNavigationJSPluginDebug {
   constructor(materials?: DebugDrawerParams) {
     this.debugDrawerUtils = new DebugDrawerUtils();
 
+    this._parent.position.y += 0.01;
+
     this.triMaterial =
       materials?.triMaterial ?? new StandardMaterial("triMaterial");
-    this.triMaterial.alpha = 0.4;
-    this.triMaterial.disableDepthWrite = true;
+    this.triMaterial.backFaceCulling = false;
 
     this.pointMaterial =
       materials?.pointMaterial ?? new StandardMaterial("pointMaterial");
+    this.pointMaterial.backFaceCulling = false;
 
     this.lineMaterial =
       materials?.lineMaterial ?? new StandardMaterial("lineMaterial");
+    this.lineMaterial.backFaceCulling = false;
   }
 
   drawPrimitives(primitives: DebugDrawerPrimitive[]) {
@@ -240,7 +245,7 @@ export class RecastNavigationJSPluginDebug {
       },
       {
         colors,
-        width: 0.4,
+        width: 0.2,
       }
     );
 
@@ -268,7 +273,7 @@ export class RecastNavigationJSPluginDebug {
     vertexData.positions = positions;
     vertexData.colors = colors;
 
-    const customMesh = new Mesh("custom");
+    const customMesh = new Mesh(NAV_MESH_DEBUG_NAME);
     customMesh.isUnIndexed = true;
     vertexData.applyToMesh(customMesh);
 

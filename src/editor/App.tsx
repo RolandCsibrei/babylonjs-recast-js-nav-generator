@@ -1,10 +1,11 @@
 import "./App.css";
 import { useEffect } from "react";
 
-import FileLoader from "./editor/components/FileLoader";
+import { EditorPage } from "./pages/EditorPage";
+import FileLoader from "./components/FileLoader";
 import { EditorScene } from "./EditorScene";
-import { EditorPage } from "./editor/pages/EditorPage";
-import { signalEditor } from "./editor/signals";
+
+import { signalEditor } from "./state/signals";
 
 function App() {
   // create the Editor instance

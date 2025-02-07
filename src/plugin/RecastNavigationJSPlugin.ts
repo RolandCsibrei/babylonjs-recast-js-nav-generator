@@ -56,6 +56,8 @@ export interface NavMeshParameters {
   detailSampleMaxError: number;
   tileSize: number;
   borderSize: number;
+  expectedLayersPerTile: number;
+  maxLayers: number;
   keepIntermediates?: boolean;
 }
 const _delta = new Vector3();
@@ -207,6 +209,14 @@ export class RecastNavigationJSPlugin implements INavigationEnginePluginV2 {
   // TODO: Nullable?
   private _positions: Float32Array = new Float32Array();
   private _indices: Uint32Array = new Uint32Array();
+
+  public get positions() {
+    return this._positions;
+  }
+
+  public get indices() {
+    return this._indices;
+  }
 
   /**
    * Initializes the recastJS plugin

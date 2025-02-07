@@ -1,8 +1,8 @@
 import { useControls } from "leva";
-import { levaText } from "./leva-text";
-import { signalDebugDisplayOptions } from "../signals";
+import { signalDebugDisplayOptions } from "../state/signals";
+import { levaText } from "./plugins/leva-text";
 
-export const useDebugDisplayOptionsControls = () => {
+export const useDebugDisplayControls = () => {
   signalDebugDisplayOptions.value = useControls(
     "Display Options.NavMesh Generator Input",
     {

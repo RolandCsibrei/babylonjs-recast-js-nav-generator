@@ -1,10 +1,10 @@
 import { button, useControls } from "leva";
 import { useSignals } from "@preact/signals-react/runtime";
 
-import { sigalnIsLoading, signalNavMesh } from "../signals";
-import { levaText } from "./leva-text";
+import { sigalnIsLoading, signalNavMesh } from "../state/signals";
+import { levaText } from "./plugins/leva-text";
 
-export const useGlbActionsControls = ({
+export const useGlbControls = ({
   loadGlb,
   loadDefaultGlbSmall,
   loadDefaultGlbBig,

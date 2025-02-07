@@ -1,3 +1,5 @@
+import { exportNavMesh, init as initRecast } from "recast-navigation";
+
 import { ArcRotateCamera } from "@babylonjs/core/Cameras/arcRotateCamera";
 import { Engine } from "@babylonjs/core/Engines/engine";
 import { HemisphericLight } from "@babylonjs/core/Lights/hemisphericLight";
@@ -24,8 +26,8 @@ import {
 import { CreateGreasedLine } from "@babylonjs/core/Meshes/Builders/greasedLineBuilder";
 import { ISceneLoaderAsyncResult } from "@babylonjs/core/Loading/sceneLoader.js";
 import { Nullable } from "@babylonjs/core/types";
-
-import { exportNavMesh, init as initRecast } from "recast-navigation";
+import { VertexData } from "@babylonjs/core/Meshes/mesh.vertexData";
+import { Tags } from "@babylonjs/core/Misc/tags";
 
 import {
   AgentControls,
@@ -34,6 +36,7 @@ import {
   signalDebugDisplayOptions,
   signalDebugDrawerControls,
   signalGeneratorIntermediates,
+  signalIndexedTriangleInputMesh,
   signalModelBlob,
   signalNavMesh,
   signalNavMeshParameters,
@@ -41,21 +44,28 @@ import {
   signalTestAgentStart,
   signalTestAgentTarget,
   signGlbDisplayOptions,
-} from "./editor/signals";
+} from "./state/signals";
+
 import {
+  createFilesInput,
   loadDefaultGlbBig,
   loadDefaultGlbSmall,
   loadModelFromBlob,
-} from "./editor/scene-loader";
-import { RecastNavigationJSPlugin } from "./plugin/RecastNavigationJSPlugin";
-import { hookInspector } from "./editor/inspector";
-import { setCameraLimits, zoomOnScene } from "./editor/camera";
-import { download } from "./download";
-import { RecastNavigationJSPluginDebug } from "./plugin/RecastNavigationJSPluginDebug";
-import { drawDebug } from "./editor/leva-controls/debug-drawer";
+} from "./utils/scene-loader";
+
+import { hookInspector } from "./utils/inspector";
+import { setCameraLimits, zoomOnScene } from "./utils/camera";
+import { download } from "./utils/download";
+import { TAG_MODEL } from "./utils/tags";
+
+import {
+  NAV_MESH_DEBUG_NAME,
+  RecastNavigationJSPluginDebug,
+} from "../plugin/RecastNavigationJSPluginDebug";
+import { RecastNavigationJSPlugin } from "../plugin/RecastNavigationJSPlugin";
+import { drawDebug } from "../plugin/debug-drawer";
 
 export const MAIN_LIGHT_NAME = "main-light";
-const NAV_MESH_NAME = "nav-mesh";
 
 export class EditorScene {
   private _engine: Engine;
@@ -65,6 +75,8 @@ export class EditorScene {
   private _navigation?: RecastNavigationJSPlugin;
 
   private _debugNavMeshMaterial: StandardMaterial;
+  private _navMeshGeneratorInputMeshMaterial: StandardMaterial;
+  private _navMeshGeneratorInputMesh: Nullable<Mesh> = null;
 
   private _crowd?: ICrowd;
   private _agent?: {
@@ -91,44 +103,22 @@ export class EditorScene {
     this._scene = scene;
     this._camera = camera;
     this._ui = AdvancedDynamicTexture.CreateFullscreenUI("ui");
+
     this._debugNavMeshMaterial = this._createDebugNavMeshMaterial();
+    this._navMeshGeneratorInputMeshMaterial =
+      this._createnavMeshGeneratorInputMeshMaterial();
   }
 
   public async init() {
     await this._initNavigation();
 
-    await loadDefaultGlbSmall();
-
     this._subscribeSignals();
-
-    zoomOnScene(this.scene, this.camera);
 
     this._runRenderLoop();
 
-    this.scene.onReadyObservable.addOnce(async () => {
+    this._scene.onReadyObservable.addOnce(async () => {
       // ready
     });
-  }
-
-  // TODO: remove getters
-  public get engine() {
-    return this._engine;
-  }
-
-  public get scene() {
-    return this._scene;
-  }
-
-  public get camera() {
-    return this._camera;
-  }
-
-  public get ui() {
-    return this._ui;
-  }
-
-  public get navigation() {
-    return this._navigation;
   }
 
   private async _initNavigation() {
@@ -150,7 +140,7 @@ export class EditorScene {
 
     //
 
-    const camera = new ArcRotateCamera("main", 0, 0, 50, Vector3.Zero());
+    const camera = new ArcRotateCamera("main", 0, 0, 100, Vector3.Zero());
     setCameraLimits(camera, {
       panningSensitivity: 15,
     });
@@ -167,9 +157,16 @@ export class EditorScene {
     };
   }
 
+  private _resetCamera() {
+    this._camera.alpha = 0;
+    this._camera.beta = 0;
+    this._camera.radius = 100;
+    this._camera.target = Vector3.ZeroReadOnly;
+  }
+
   private _runRenderLoop() {
-    this.scene.getEngine().runRenderLoop(() => {
-      this.scene.render();
+    this._scene.getEngine().runRenderLoop(() => {
+      this._scene.render();
     });
   }
 
@@ -186,30 +183,44 @@ export class EditorScene {
   }
 
   private _createDebugNavMeshMaterial() {
-    const material = new StandardMaterial("debug-nav-mesh");
+    const material = new StandardMaterial("nav-mesh-debug");
+    material.emissiveColor = Color3.Yellow();
+    material.disableLighting = true;
+    return material;
+  }
+
+  private _createnavMeshGeneratorInputMeshMaterial() {
+    const material = new StandardMaterial("nav-mesh-input");
     material.disableLighting = true;
     return material;
   }
 
   private _removeExistingModels() {
-    const transformNodeIdstoDispose = this.scene.transformNodes.map(
-      (n) => n.id
-    );
-    const meshNodeIdstoDispose = this.scene.meshes.map((n) => n.id);
-    this._diposeNodes([...transformNodeIdstoDispose, ...meshNodeIdstoDispose]);
+    // const transformNodeIdstoDispose = this._scene.transformNodes.map(
+    //   (n) => n.id
+    // );
+    // const meshNodeIdstoDispose = this._scene.meshes.map((n) => n.id);
+    // this._diposeNodes([...transformNodeIdstoDispose, ...meshNodeIdstoDispose]);
+
+    const meshNodeIdstoDispose = this._scene
+      .getMeshesByTags(TAG_MODEL)
+      .map((n) => n.id);
+    this._diposeNodes([...meshNodeIdstoDispose]);
   }
 
   private _diposeNodes(ids: string[]) {
     for (const id of ids) {
-      this.scene.getNodeById(id)?.dispose();
+      this._scene.getNodeById(id)?.dispose();
     }
   }
 
   private _subscribeSignals() {
-    hookInspector(this.scene);
+    hookInspector(this._scene);
 
+    this._createDragAndDropLoader();
     this._subscribeModelBlob();
     this._subscribeNavMeshParamaters();
+    this._subscribeIndexedGTriangleInputMesh();
     this._subscribeDisplayModel();
     this._subscribeDisplayOptions();
     this._subscribeDebugDrawerControls();
@@ -217,6 +228,10 @@ export class EditorScene {
     this._subscribeTestAgent();
     this._subscribeTestAgentTargetPicker();
     this._subscribeAgentMovement();
+  }
+
+  private _createDragAndDropLoader() {
+    createFilesInput(this._engine, this._scene, this._canvas);
   }
 
   private _subscribeDebugDrawerControls() {
@@ -240,13 +255,13 @@ export class EditorScene {
   private _subscribeTestAgentTargetPicker() {
     const pointerEventTypes = [PointerEventTypes.POINTERUP];
     // TODO: unreg
-    this.scene.onPointerObservable.add((pi: PointerInfo) => {
+    this._scene.onPointerObservable.add((pi: PointerInfo) => {
       if (!pointerEventTypes.includes(pi.type)) {
         return;
       }
 
       if (
-        pi.pickInfo?.pickedMesh?.name === NAV_MESH_NAME &&
+        pi.pickInfo?.pickedMesh?.name === NAV_MESH_DEBUG_NAME &&
         pi.pickInfo.pickedPoint
       ) {
         if (pi.event.button === 0) {
@@ -287,10 +302,10 @@ export class EditorScene {
     //
 
     signalTestAgentStart.subscribe((position) => {
-      if (!position || !this._agent || !this.navigation || !this._crowd) {
+      if (!position || !this._agent || !this._navigation || !this._crowd) {
         return;
       }
-      const positionOnNavMesh = this.navigation.getClosestPoint(position);
+      const positionOnNavMesh = this._navigation.getClosestPoint(position);
       this._crowd.agentTeleport(this._agent?.idx, positionOnNavMesh);
     });
 
@@ -299,14 +314,14 @@ export class EditorScene {
     const lineColor = Color3.Blue();
 
     signalTestAgentTarget.subscribe((position) => {
-      if (!position || !this._agent || !this.navigation || !this._crowd) {
+      if (!position || !this._agent || !this._navigation || !this._crowd) {
         return;
       }
 
-      const targetOnNavMesh = this.navigation.getClosestPoint(position);
+      const targetOnNavMesh = this._navigation.getClosestPoint(position);
       this._crowd.agentGoto(this._agent?.idx, targetOnNavMesh);
 
-      const pathPoints = this.navigation.computePath(
+      const pathPoints = this._navigation.computePath(
         this._crowd.getAgentPosition(this._agent.idx),
         targetOnNavMesh
       );
@@ -421,7 +436,7 @@ export class EditorScene {
   }
 
   private _subscribeClipPlanes() {
-    const utilLayer = new UtilityLayerRenderer(this.scene);
+    const utilLayer = new UtilityLayerRenderer(this._scene);
     // const rootBB = root.getHierarchyBoundingVectors(true);
 
     //
@@ -488,7 +503,7 @@ export class EditorScene {
 
     //
 
-    this.scene.onBeforeRenderObservable.add(() => {
+    this._scene.onBeforeRenderObservable.add(() => {
       // const matrix1 = Matrix.Translation(0, plane1.position.y, 0);
       // clipPlane1 = clipPlane1.transform(matrix1);
 
@@ -527,7 +542,7 @@ export class EditorScene {
         return;
       }
 
-      const roots = this.scene.meshes.filter((m) => m.name === "__root__");
+      const roots = this._scene.meshes.filter((m) => m.name === "__root__");
       for (const m of roots) {
         m.setEnabled(options.displayModel);
       }
@@ -543,17 +558,20 @@ export class EditorScene {
         return;
       }
 
-      this._debugNavMeshMaterial.wireframe =
-        options.navMeshGeneratorInputWireframe;
-      this._debugNavMeshMaterial.alpha = options.navMeshGeneratorInputOpacity;
-      this._debugNavMeshMaterial.emissiveColor = Color3.FromHexString(
-        options.navMeshGeneratorInputDebugColor
+      this._navMeshGeneratorInputMesh?.setEnabled(
+        options.displayNavMeshGenerationInput
       );
+      this._navMeshGeneratorInputMeshMaterial.wireframe =
+        options.navMeshGeneratorInputWireframe;
+      this._navMeshGeneratorInputMeshMaterial.alpha =
+        options.navMeshGeneratorInputOpacity;
+      this._navMeshGeneratorInputMeshMaterial.emissiveColor =
+        Color3.FromHexString(options.navMeshGeneratorInputDebugColor);
     });
   }
 
   private _subscribeNavMeshParamaters() {
-    let debugNavMesh: Nullable<Mesh> = null;
+    // let debugNavMesh: Nullable<Mesh> = null;
     signalNavMeshParameters.subscribe(async (navMeshParams) => {
       if (!navMeshParams || !this._navigation) {
         return;
@@ -564,22 +582,32 @@ export class EditorScene {
         this._disposeCrowd();
 
         // remove the old debugnnav mesh if exists
-        if (debugNavMesh) {
-          debugNavMesh.dispose();
-        }
+        // if (debugNavMesh) {
+        //   debugNavMesh.dispose();
+        // }
 
         this._navigation.createNavMesh(
           this._getMeshesForNavMeshCreation(),
           navMeshParams
         );
+
+        signalIndexedTriangleInputMesh.value = {
+          positions: this._navigation.positions,
+          indices: this._navigation.indices,
+        };
+
         signalNavMesh.value = this._navigation.navMesh ?? null;
         signalGeneratorIntermediates.value =
           this._navigation.intermediates ?? null;
 
         // generate the new debug navmesh
-        debugNavMesh = this._navigation.createDebugNavMesh(this.scene);
-        debugNavMesh.name = NAV_MESH_NAME;
-        debugNavMesh.material = this._debugNavMeshMaterial;
+        signalDebugDrawerControls.value = {
+          ...signalDebugDrawerControls.peek(),
+        };
+
+        // debugNavMesh = this._navigation.createDebugNavMesh(this._scene);
+        // debugNavMesh.name = NAV_MESH_DEBUG_NAME;
+        // debugNavMesh.material = this._debugNavMeshMaterial;
       } catch (error) {
         console.error(error);
         signalNavMesh.value = null;
@@ -587,8 +615,36 @@ export class EditorScene {
     });
   }
 
+  private _subscribeIndexedGTriangleInputMesh() {
+    signalIndexedTriangleInputMesh.subscribe((data) => {
+      if (this._navMeshGeneratorInputMesh) {
+        this._navMeshGeneratorInputMesh.dispose();
+      }
+
+      if (!data) {
+        return;
+      }
+
+      if (!data.positions || !data.positions) {
+        return;
+      }
+
+      const vertexData = new VertexData();
+      vertexData.positions = data.positions;
+      vertexData.indices = data.indices;
+
+      this._navMeshGeneratorInputMesh = new Mesh("nav-mesh-input");
+      vertexData.applyToMesh(this._navMeshGeneratorInputMesh);
+
+      this._navMeshGeneratorInputMesh.material =
+        this._navMeshGeneratorInputMeshMaterial;
+
+      signalDebugDisplayOptions.value = { ...signalDebugDisplayOptions.peek() };
+    });
+  }
+
   private _getMeshesForNavMeshCreation() {
-    return this.scene.meshes.filter(
+    return this._scene.meshes.filter(
       (m) => m.parent?.name === "__root__"
     ) as Mesh[];
   }
@@ -598,13 +654,15 @@ export class EditorScene {
     signalModelBlob.subscribe(async (blob) => {
       this._removeExistingModels();
 
+      // this._resetCamera();
+
       if (!blob) {
         return;
       }
 
       let loaded: Nullable<ISceneLoaderAsyncResult> = null;
       if (blob instanceof Blob) {
-        loaded = await loadModelFromBlob(blob, "model.glb", this.scene);
+        loaded = await loadModelFromBlob(blob, "model.glb", this._scene);
       } else {
         if (blob === DefaultGlbSize.Big) {
           loaded = await loadDefaultGlbBig();
@@ -613,24 +671,27 @@ export class EditorScene {
         }
       }
 
-      loaded?.meshes.forEach((m) => (m.isPickable = false));
+      for (const m of loaded?.meshes ?? []) {
+        m.isPickable = false;
+        Tags.AddTagsTo(m, TAG_MODEL);
+      }
 
-      zoomOnScene(this.scene, this.camera);
+      zoomOnScene(this._scene, this._camera);
     });
   }
 
   public exportAsRecastNavMesh() {
-    if (!this.navigation?.navMesh) {
+    if (!this._navigation?.navMesh) {
       return;
     }
-    const navMeshExport = exportNavMesh(this.navigation.navMesh);
+    const navMeshExport = exportNavMesh(this._navigation.navMesh);
     download(navMeshExport, "application/octet-stream", "navmesh.bin");
   }
 
   public async exportAsGlb() {
-    const glb = await GLTF2Export.GLBAsync(this.scene, "navmesh.glb", {
+    const glb = await GLTF2Export.GLBAsync(this._scene, "navmesh.glb", {
       shouldExportNode: function (node) {
-        return node.name === NAV_MESH_NAME;
+        return node.name === NAV_MESH_DEBUG_NAME;
       },
     });
     glb.downloadFiles();

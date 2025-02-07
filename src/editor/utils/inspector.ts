@@ -1,5 +1,5 @@
 import { KeyboardEventTypes, Scene } from "@babylonjs/core";
-import { signalIsInspectorOpen } from "./signals";
+import { signalIsInspectorOpen } from "../state/signals";
 
 export function hookInspector(scene: Scene) {
   scene.onKeyboardObservable.add((kbInfo) => {

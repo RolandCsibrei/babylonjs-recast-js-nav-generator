@@ -1,4 +1,4 @@
-import { signalModelBlob } from "../signals";
+import { signalModelBlob } from "../state/signals";
 
 const FileLoader = () => {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {

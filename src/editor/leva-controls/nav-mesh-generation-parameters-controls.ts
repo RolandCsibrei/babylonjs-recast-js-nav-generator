@@ -1,7 +1,7 @@
 import { useControls } from "leva";
-import { levaText } from "./leva-text";
+import { levaText } from "./plugins/leva-text";
 
-export const useNavMeshGenerationControls = () => {
+export const useNavMeshGenerationParametersControls = () => {
   const { ...navMeshConfig } = useControls("NavMesh Generation Config", {
     cs: {
       label: "Cell Size",
@@ -65,16 +65,16 @@ export const useNavMeshGenerationControls = () => {
       label: "Detail Sample Max Error",
       value: 1,
     },
-    // expectedLayersPerTile: {
-    //   label: "Expected Layers Per Tile",
-    //   value: 4,
-    //   step: 1,
-    // },
-    // maxLayers: {
-    //   label: "Max Layers",
-    //   value: 32,
-    //   step: 1,
-    // },
+    expectedLayersPerTile: {
+      label: "Expected Layers Per Tile",
+      value: 4,
+      step: 1,
+    },
+    maxLayers: {
+      label: "Max Layers",
+      value: 32,
+      step: 1,
+    },
     keepIntermediates: {
       label: "Keep Intermediates",
       value: true,
