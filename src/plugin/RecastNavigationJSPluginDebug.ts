@@ -1,8 +1,8 @@
 import { StandardMaterial } from "@babylonjs/core/Materials/standardMaterial";
 import { Color3 } from "@babylonjs/core/Maths/math.color";
 import { Matrix } from "@babylonjs/core/Maths/math.vector";
+import { CreateDisc } from "@babylonjs/core/Meshes/Builders/discBuilder";
 import { CreateGreasedLine } from "@babylonjs/core/Meshes/Builders/greasedLineBuilder";
-import { CreateSphere } from "@babylonjs/core/Meshes/Builders/sphereBuilder";
 import { Mesh } from "@babylonjs/core/Meshes/mesh";
 import { VertexData } from "@babylonjs/core/Meshes/mesh.vertexData";
 import { TransformNode } from "@babylonjs/core/Meshes/transformNode";
@@ -29,32 +29,33 @@ export type DebugDrawerParams = {
 };
 
 export class RecastNavigationJSPluginDebug {
-  triMaterial: StandardMaterial;
+  private _triMaterial: StandardMaterial;
+  private _pointMaterial: StandardMaterial;
+  private _lineMaterial: StandardMaterial;
+  private _pointMesh: Mesh;
 
-  pointMaterial: StandardMaterial;
-  pointMesh = CreateSphere("point", { diameter: 0.02, segments: 8 });
-
-  lineMaterial: StandardMaterial;
-
-  private _parent = new TransformNode("debugDrawerParent");
+  public debugDrawerParent = new TransformNode("debugDrawerParent");
 
   private debugDrawerUtils: DebugDrawerUtils;
   constructor(materials?: DebugDrawerParams) {
     this.debugDrawerUtils = new DebugDrawerUtils();
 
-    this._parent.position.y += 0.01;
+    this.debugDrawerParent.position.y += 0.01;
 
-    this.triMaterial =
+    this._triMaterial =
       materials?.triMaterial ?? new StandardMaterial("triMaterial");
-    this.triMaterial.backFaceCulling = false;
+    this._triMaterial.backFaceCulling = false;
 
-    this.pointMaterial =
+    this._pointMaterial =
       materials?.pointMaterial ?? new StandardMaterial("pointMaterial");
-    this.pointMaterial.backFaceCulling = false;
+    this._pointMaterial.backFaceCulling = false;
 
-    this.lineMaterial =
+    this._lineMaterial =
       materials?.lineMaterial ?? new StandardMaterial("lineMaterial");
-    this.lineMaterial.backFaceCulling = false;
+    this._lineMaterial.backFaceCulling = false;
+
+    this._pointMesh = CreateDisc("point", { radius: 0.02, tessellation: 8 });
+    this._pointMesh.billboardMode = Mesh.BILLBOARDMODE_ALL;
   }
 
   drawPrimitives(primitives: DebugDrawerPrimitive[]) {
@@ -185,7 +186,7 @@ export class RecastNavigationJSPluginDebug {
   }
 
   reset(): void {
-    for (const child of this._parent.getChildMeshes()) {
+    for (const child of this.debugDrawerParent.getChildMeshes()) {
       child.dispose();
     }
   }
@@ -195,11 +196,11 @@ export class RecastNavigationJSPluginDebug {
 
     this.debugDrawerUtils.dispose();
 
-    this.pointMesh.dispose();
+    this._pointMesh.dispose();
 
-    this.triMaterial.dispose();
-    this.pointMaterial.dispose();
-    this.lineMaterial.dispose();
+    this._triMaterial.dispose();
+    this._pointMaterial.dispose();
+    this._lineMaterial.dispose();
   }
 
   private drawPoints(primitive: DebugDrawerPrimitive): void {
@@ -218,10 +219,10 @@ export class RecastNavigationJSPluginDebug {
       matrix.copyToArray(matricesData, i * 16);
     }
 
-    this.pointMesh.thinInstanceSetBuffer("matrix", matricesData, 16);
-    this.pointMesh.thinInstanceSetBuffer("color", colorData, 4);
+    this._pointMesh.thinInstanceSetBuffer("matrix", matricesData, 16);
+    this._pointMesh.thinInstanceSetBuffer("color", colorData, 4);
 
-    this.pointMesh.parent = this._parent;
+    this._pointMesh.parent = this.debugDrawerParent;
   }
 
   private drawLines(primitive: DebugDrawerPrimitive): void {
@@ -249,7 +250,7 @@ export class RecastNavigationJSPluginDebug {
       }
     );
 
-    lines.parent = this._parent;
+    lines.parent = this.debugDrawerParent;
   }
 
   private drawTris(primitive: DebugDrawerPrimitive): void {
@@ -277,9 +278,9 @@ export class RecastNavigationJSPluginDebug {
     customMesh.isUnIndexed = true;
     vertexData.applyToMesh(customMesh);
 
-    customMesh.material = this.triMaterial;
+    customMesh.material = this._triMaterial;
 
-    customMesh.parent = this._parent;
+    customMesh.parent = this.debugDrawerParent;
   }
 
   private drawQuads(primitive: DebugDrawerPrimitive): void {
@@ -308,8 +309,8 @@ export class RecastNavigationJSPluginDebug {
     customMesh.isUnIndexed = true;
     vertexData.applyToMesh(customMesh);
 
-    customMesh.material = this.triMaterial;
+    customMesh.material = this._triMaterial;
 
-    customMesh.parent = this._parent;
+    customMesh.parent = this.debugDrawerParent;
   }
 }

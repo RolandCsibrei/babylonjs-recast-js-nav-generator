@@ -11,7 +11,7 @@ import { EditorScene } from "./EditorScene";
 export function subscribeNavMeshParamaters(editor: EditorScene) {
   // let debugNavMesh: Nullable<Mesh> = null;
   signalNavMeshParameters.subscribe(async (navMeshParams) => {
-    if (!navMeshParams || !editor._navigation) {
+    if (!navMeshParams || !editor.navigation) {
       return;
     }
 
@@ -24,19 +24,19 @@ export function subscribeNavMeshParamaters(editor: EditorScene) {
       //   debugNavMesh.dispose();
       // }
 
-      editor._navigation.createNavMesh(
+      editor.navigation.createNavMesh(
         editor.getMeshesForNavMeshCreation(),
         navMeshParams
       );
 
       signalIndexedTriangleInputMeshData.value = {
-        positions: editor._navigation.positions,
-        indices: editor._navigation.indices,
+        positions: editor.navigation.positions,
+        indices: editor.navigation.indices,
       };
 
-      signalNavMesh.value = editor._navigation.navMesh ?? null;
+      signalNavMesh.value = editor.navigation.navMesh ?? null;
       signalGeneratorIntermediates.value =
-        editor._navigation.intermediates ?? null;
+        editor.navigation.intermediates ?? null;
 
       // generate the new debug navmesh
       signalDebugDrawerControls.value = {

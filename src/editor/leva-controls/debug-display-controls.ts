@@ -7,7 +7,7 @@ export const useDebugDisplayControls = () => {
     "Display Options.NavMesh Generator Input",
     {
       _: levaText(
-        "The indexed triangle mesh that will be used for NavMesh generation. You have the generate the nav mesh prior showing the input mesh."
+        "The indexed triangle mesh that will be used for NavMesh generation. You have to generate the nav mesh prior showing the input mesh."
       ),
       displayNavMeshGenerationInput: {
         label: "Show Input",

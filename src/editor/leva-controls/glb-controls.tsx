@@ -25,10 +25,10 @@ export const useGlbControls = ({
       }),
       _1: levaText("Or drag and drop to load.GLB/GLTF supported."),
 
-      "Load Default GLB - Small": button(() => loadDefaultGlbSmall(), {
+      "Load Example GLB - Small": button(() => loadDefaultGlbSmall(), {
         disabled: sigalnIsLoading.value,
       }),
-      "Load Default GLB - Big": button(() => loadDefaultGlbBig(), {
+      "Load Example GLB - Big": button(() => loadDefaultGlbBig(), {
         disabled: sigalnIsLoading.value,
       }),
       "Export as GLTF": button(exportAsGlb, {

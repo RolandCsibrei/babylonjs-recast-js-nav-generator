@@ -9,7 +9,7 @@ import { StandardMaterial } from "@babylonjs/core/Materials/standardMaterial";
 import { signalClippingPlanes } from "../state/signals";
 
 export function subscribeClipPlanes(editor: EditorScene) {
-  const utilLayer = new UtilityLayerRenderer(editor._scene);
+  const utilLayer = new UtilityLayerRenderer(editor.scene);
 
   // const root = signalIndexedTriangleInputMesh.value
   // if (root) {
@@ -81,7 +81,7 @@ export function subscribeClipPlanes(editor: EditorScene) {
 
   //
 
-  editor._scene.onBeforeRenderObservable.add(() => {
+  editor.scene.onBeforeRenderObservable.add(() => {
     // const matrix1 = Matrix.Translation(0, plane1.position.y, 0);
     // clipPlane1 = clipPlane1.transform(matrix1);
 
@@ -95,9 +95,9 @@ export function subscribeClipPlanes(editor: EditorScene) {
         new Vector3(0, plane1.position.y, 0),
         new Vector3(0, 1, 0)
       );
-      editor._debugNavMeshMaterial.clipPlane = clipPlane1;
+      editor.debugNavMeshMaterial.clipPlane = clipPlane1;
     } else {
-      editor._debugNavMeshMaterial.clipPlane = null;
+      editor.debugNavMeshMaterial.clipPlane = null;
     }
 
     if (useClipPlane2) {
@@ -105,9 +105,9 @@ export function subscribeClipPlanes(editor: EditorScene) {
         new Vector3(0, plane2.position.y, 0),
         new Vector3(0, -1, 0)
       );
-      editor._debugNavMeshMaterial.clipPlane2 = clipPlane2;
+      editor.debugNavMeshMaterial.clipPlane2 = clipPlane2;
     } else {
-      editor._debugNavMeshMaterial.clipPlane2 = null;
+      editor.debugNavMeshMaterial.clipPlane2 = null;
     }
   });
 }

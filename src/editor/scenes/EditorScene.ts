@@ -16,6 +16,7 @@ import { TransformNode } from "@babylonjs/core/Meshes/transformNode";
 import { ICrowd } from "@babylonjs/core/Navigation/INavigationEngine";
 import { CreateCapsule } from "@babylonjs/core/Meshes/Builders/capsuleBuilder";
 import { Nullable } from "@babylonjs/core/types";
+import { FilesInput } from "@babylonjs/core/Misc/filesInput";
 
 import { AgentControls } from "../state/signals";
 
@@ -26,7 +27,10 @@ import { setCameraLimits } from "../utils/camera";
 import { download } from "../utils/download";
 import { TAG_MODEL } from "../utils/tags";
 
-import { NAV_MESH_DEBUG_NAME } from "../../plugin/RecastNavigationJSPluginDebug";
+import {
+  NAV_MESH_DEBUG_NAME,
+  RecastNavigationJSPluginDebug,
+} from "../../plugin/RecastNavigationJSPluginDebug";
 import { RecastNavigationJSPlugin } from "../../plugin/RecastNavigationJSPlugin";
 import { subscribeModelBlob } from "./model-blob";
 import { subscribeNavMeshParamaters } from "./nav-mesh-parameters";
@@ -40,22 +44,29 @@ import {
   subscribeTestAgent,
   updateCrowdAgentParams,
 } from "./crowd-agent";
+import { subscribeDisplayScenel } from "./display-scene";
+import { AxesViewer } from "@babylonjs/core/Debug/axesViewer";
 
 export const MAIN_LIGHT_NAME = "main-light";
 
 export class EditorScene {
-  public _engine: Engine;
-  public _scene: Scene;
-  public _camera: ArcRotateCamera;
-  public _ui: AdvancedDynamicTexture;
-  public _navigation?: RecastNavigationJSPlugin;
+  public engine: Engine;
+  public scene: Scene;
+  public camera: ArcRotateCamera;
+  public light: HemisphericLight;
+  public ui: AdvancedDynamicTexture;
+  public navigation?: RecastNavigationJSPlugin;
+  public navigationDebug?: RecastNavigationJSPluginDebug;
+  public root: Nullable<Mesh> = null;
+  public filesInput: Nullable<FilesInput> = null;
 
-  public _debugNavMeshMaterial: StandardMaterial;
-  public _navMeshGeneratorInputMeshMaterial: StandardMaterial;
-  public _navMeshGeneratorInputMesh: Nullable<Mesh> = null;
+  public debugNavMeshMaterial: StandardMaterial;
+  public navMeshGeneratorInputMeshMaterial: StandardMaterial;
+  public navMeshGeneratorInputMesh: Nullable<Mesh> = null;
+  public scaling = new Vector3(1, 1, 1); // calculated from the loaded model bounds, used to scale addiitonal controls on the scene
 
-  public _crowd?: ICrowd;
-  public _agent?: {
+  public crowd?: ICrowd;
+  public agent?: {
     idx: number;
     transform: TransformNode;
     mesh: Mesh;
@@ -63,7 +74,7 @@ export class EditorScene {
   };
 
   constructor(private _canvas: HTMLCanvasElement) {
-    const { engine, scene, camera } = this._createScene(this._canvas);
+    const { engine, scene, camera, light } = this._createScene(this._canvas);
 
     if (!engine) {
       throw new Error("Unable to create babylon.js engine!");
@@ -75,13 +86,14 @@ export class EditorScene {
 
     scene.clearColor = new Color4(0.1, 0.1, 0.1, 1);
 
-    this._engine = engine;
-    this._scene = scene;
-    this._camera = camera;
-    this._ui = AdvancedDynamicTexture.CreateFullscreenUI("ui");
+    this.engine = engine;
+    this.scene = scene;
+    this.camera = camera;
+    this.light = light;
+    this.ui = AdvancedDynamicTexture.CreateFullscreenUI("ui");
 
-    this._debugNavMeshMaterial = this._createDebugNavMeshMaterial();
-    this._navMeshGeneratorInputMeshMaterial =
+    this.debugNavMeshMaterial = this._createDebugNavMeshMaterial();
+    this.navMeshGeneratorInputMeshMaterial =
       this._createnavMeshGeneratorInputMeshMaterial();
   }
 
@@ -92,7 +104,7 @@ export class EditorScene {
 
     this._runRenderLoop();
 
-    this._scene.onReadyObservable.addOnce(async () => {
+    this.scene.onReadyObservable.addOnce(async () => {
       // ready
     });
   }
@@ -100,7 +112,8 @@ export class EditorScene {
   private async _initNavigation() {
     await initRecast();
 
-    this._navigation = new RecastNavigationJSPlugin();
+    this.navigation = new RecastNavigationJSPlugin();
+    this.navigationDebug = new RecastNavigationJSPluginDebug();
   }
 
   private _createScene(canvas: HTMLCanvasElement) {
@@ -119,6 +132,10 @@ export class EditorScene {
     const camera = new ArcRotateCamera("main", 0, 0, 100, Vector3.Zero());
     setCameraLimits(camera, {
       panningSensitivity: 15,
+      minZ: 0.5,
+      maxZ: 20000,
+      lowerRadiusLimit: 0.5,
+      upperRadiusLimit: 500,
     });
     camera.attachControl();
 
@@ -130,19 +147,20 @@ export class EditorScene {
       camera,
       scene,
       engine,
+      light,
     };
   }
 
   private _resetCamera() {
-    this._camera.alpha = 0;
-    this._camera.beta = 0;
-    this._camera.radius = 100;
-    this._camera.target = Vector3.ZeroReadOnly;
+    this.camera.alpha = 0;
+    this.camera.beta = 0;
+    this.camera.radius = 100;
+    this.camera.target = Vector3.ZeroReadOnly;
   }
 
   private _runRenderLoop() {
-    this._scene.getEngine().runRenderLoop(() => {
-      this._scene.render();
+    this.scene.getEngine().runRenderLoop(() => {
+      this.scene.render();
     });
   }
 
@@ -171,88 +189,82 @@ export class EditorScene {
     return material;
   }
 
-  public _removeExistingModels() {
-    // const transformNodeIdstoDispose = this._scene.transformNodes.map(
-    //   (n) => n.id
-    // );
-    // const meshNodeIdstoDispose = this._scene.meshes.map((n) => n.id);
-    // this._diposeNodes([...transformNodeIdstoDispose, ...meshNodeIdstoDispose]);
-
-    const meshNodeIdstoDispose = this._scene
-      .getMeshesByTags(TAG_MODEL)
-      .map((n) => n.id);
-    this._diposeNodes([...meshNodeIdstoDispose]);
-  }
-
   private _diposeNodes(ids: string[]) {
     for (const id of ids) {
-      this._scene.getNodeById(id)?.dispose();
+      this.scene.getNodeById(id)?.dispose();
     }
   }
 
   private _subscribeSignals() {
-    hookInspector(this._scene);
+    hookInspector(this.scene);
 
     this._createDragAndDropLoader();
     subscribeModelBlob(this);
     subscribeNavMeshParamaters(this);
     subscribeIndexedTriangleInputMeshData(this);
     subscribeDisplayModel(this);
+    subscribeDisplayScenel(this);
     subscribeDisplayOptions(this);
-    subscribeDebugDrawerControls();
+    subscribeDebugDrawerControls(this);
     subscribeClipPlanes(this);
     subscribeTestAgent(this);
   }
 
   private _createDragAndDropLoader() {
-    createFilesInput(this._engine, this._scene, this._canvas);
+    this.filesInput = createFilesInput(this.engine, this.scene, this._canvas);
+  }
+
+  public removeExistingModels() {
+    const meshNodeIdstoDispose = this.scene
+      .getMeshesByTags(TAG_MODEL)
+      .map((n) => n.id);
+    this._diposeNodes([...meshNodeIdstoDispose]);
+  }
+
+  public recalcScalinfFromLoadedModel() {
+    const rootBB = this.root?.getHierarchyBoundingVectors(true);
+    if (rootBB) {
+      const width = rootBB.max.x - rootBB.min.x;
+      this.scaling.setAll(width / 2);
+    }
+  }
+
+  public createAxisViewer() {
+    return new AxesViewer(this.scene);
   }
 
   public createCrowdAndAgent(controls: AgentControls) {
-    if (!this._navigation) {
+    if (!this.navigation) {
       return;
     }
 
-    if (this._agent) {
+    if (this.agent) {
       updateCrowdAgentParams(this, controls);
       return;
     }
 
-    const crowd = this._navigation.createCrowd(
+    const crowd = this.navigation.createCrowd(
       1,
       controls.agentRadius,
-      this._scene
+      this.scene
     );
 
-    this._crowd = crowd;
+    this.crowd = crowd;
 
-    // const targetCube = CreateBox(
-    //   "target-cube",
-    //   { size: 0.1, height: 0.1 },
-    //   this._scene
-    // );
-
-    // create agents
     const height = 2;
     const singleAgentMesh = CreateCapsule(
       "single-agent",
       { height, radius: 0.3 },
-      this._scene
+      this.scene
     );
     singleAgentMesh.position.y = height / 2;
 
-    const matAgent = new StandardMaterial("agent", this._scene);
+    const matAgent = new StandardMaterial("agent", this.scene);
 
-    // const variation = Math.random();
-    // matAgent.diffuseColor = new Color3(
-    //   0.4 + variation * 0.6,
-    //   0.3,
-    //   1.0 - variation * 0.3
-    // );
     matAgent.diffuseColor = Color3.Red();
     singleAgentMesh.material = matAgent;
 
-    const randomPos = this._navigation.getClosestPoint(new Vector3(-20, 0, 0));
+    const randomPos = this.navigation.getClosestPoint(new Vector3(0, 0, 0));
 
     const transform = new TransformNode("agent-parent");
     singleAgentMesh.parent = transform;
@@ -262,30 +274,29 @@ export class EditorScene {
       agentControlsToAgentParameters(controls),
       transform
     );
-    this._agent = {
+    this.agent = {
       idx: agentIndex,
       transform: transform,
       mesh: singleAgentMesh,
-      // target: targetCube,
     };
   }
 
   public getMeshesForNavMeshCreation() {
-    return this._scene.meshes.filter(
+    return this.scene.meshes.filter(
       (m) => m.parent?.name === "__root__"
     ) as Mesh[];
   }
 
   public exportAsRecastNavMesh() {
-    if (!this._navigation?.navMesh) {
+    if (!this.navigation?.navMesh) {
       return;
     }
-    const navMeshExport = exportNavMesh(this._navigation.navMesh);
+    const navMeshExport = exportNavMesh(this.navigation.navMesh);
     download(navMeshExport, "application/octet-stream", "navmesh.bin");
   }
 
   public async exportAsGlb() {
-    const glb = await GLTF2Export.GLBAsync(this._scene, "navmesh.glb", {
+    const glb = await GLTF2Export.GLBAsync(this.scene, "navmesh.glb", {
       shouldExportNode: function (node) {
         return node.name === NAV_MESH_DEBUG_NAME;
       },

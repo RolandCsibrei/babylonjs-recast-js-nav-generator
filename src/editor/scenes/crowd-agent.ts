@@ -30,11 +30,11 @@ export function subscribeTestAgent(editor: EditorScene) {
   //
 
   signalTestAgentStart.subscribe((position) => {
-    if (!position || !editor._agent || !editor._navigation || !editor._crowd) {
+    if (!position || !editor.agent || !editor.navigation || !editor.crowd) {
       return;
     }
-    const positionOnNavMesh = editor._navigation.getClosestPoint(position);
-    editor._crowd.agentTeleport(editor._agent?.idx, positionOnNavMesh);
+    const positionOnNavMesh = editor.navigation.getClosestPoint(position);
+    editor.crowd.agentTeleport(editor.agent?.idx, positionOnNavMesh);
   });
 
   //
@@ -42,19 +42,19 @@ export function subscribeTestAgent(editor: EditorScene) {
   const lineColor = Color3.Blue();
 
   signalTestAgentTarget.subscribe((position) => {
-    if (!position || !editor._agent || !editor._navigation || !editor._crowd) {
+    if (!position || !editor.agent || !editor.navigation || !editor.crowd) {
       return;
     }
 
-    const targetOnNavMesh = editor._navigation.getClosestPoint(position);
-    editor._crowd.agentGoto(editor._agent?.idx, targetOnNavMesh);
+    const targetOnNavMesh = editor.navigation.getClosestPoint(position);
+    editor.crowd.agentGoto(editor.agent?.idx, targetOnNavMesh);
 
-    const pathPoints = editor._navigation.computePath(
-      editor._crowd.getAgentPosition(editor._agent.idx),
+    const pathPoints = editor.navigation.computePath(
+      editor.crowd.getAgentPosition(editor.agent.idx),
       targetOnNavMesh
     );
 
-    editor._scene.getMeshByName("path-line")?.dispose();
+    editor.scene.getMeshByName("path-line")?.dispose();
 
     const pathLine = CreateGreasedLine(
       "path-line",
@@ -73,7 +73,7 @@ export function subscribeTestAgent(editor: EditorScene) {
 function subscribeTestAgentTargetPicker(editor: EditorScene) {
   const pointerEventTypes = [PointerEventTypes.POINTERUP];
   // TODO: unreg
-  editor._scene.onPointerObservable.add((pi: PointerInfo) => {
+  editor.scene.onPointerObservable.add((pi: PointerInfo) => {
     if (!pointerEventTypes.includes(pi.type)) {
       return;
     }
@@ -93,25 +93,25 @@ function subscribeTestAgentTargetPicker(editor: EditorScene) {
 }
 
 function subscribeAgentMovement(editor: EditorScene) {
-  editor._scene.onBeforeRenderObservable.add(() => {
-    if (!editor._agent || !editor._crowd) {
+  editor.scene.onBeforeRenderObservable.add(() => {
+    if (!editor.agent || !editor.crowd) {
       {
         return;
       }
     }
 
-    const deltaTime = editor._scene.getEngine().getDeltaTime() / 1000; // DeltaTime in seconds
-    editor._crowd.update(deltaTime);
-    editor._agent.transform.position = editor._crowd.getAgentPosition(
-      editor._agent.idx
+    const deltaTime = editor.scene.getEngine().getDeltaTime() / 1000; // DeltaTime in seconds
+    editor.crowd.update(deltaTime);
+    editor.agent.transform.position = editor.crowd.getAgentPosition(
+      editor.agent.idx
     );
   });
 }
 
 export function disposeCrowd(editor: EditorScene) {
-  if (editor._crowd && editor._agent?.idx) {
-    editor._crowd.removeAgent(editor._agent?.idx);
-    editor._crowd.dispose();
+  if (editor.crowd && editor.agent?.idx) {
+    editor.crowd.removeAgent(editor.agent?.idx);
+    editor.crowd.dispose();
   }
 }
 
@@ -119,12 +119,12 @@ export function updateCrowdAgentParams(
   editor: EditorScene,
   controls: AgentControls
 ) {
-  if (!editor._agent || !editor._crowd) {
+  if (!editor.agent || !editor.crowd) {
     return;
   }
 
-  editor._crowd.updateAgentParameters(
-    editor._agent.idx,
+  editor.crowd.updateAgentParameters(
+    editor.agent.idx,
     agentControlsToAgentParameters(controls)
   );
 }

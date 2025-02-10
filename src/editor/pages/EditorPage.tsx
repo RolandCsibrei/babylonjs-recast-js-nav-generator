@@ -16,11 +16,13 @@ import {
   signalModelBlob,
   signalNavMeshParameters,
 } from "../state/signals";
+import { useSceneDisplayControls } from "../leva-controls/scene-display-controls";
 
 export function EditorPage() {
   useSignals();
 
   const generateNavMesh = () => {
+    // trigger navmesh generation
     signalNavMeshParameters.value = { ...navMeshConfig };
   };
 
@@ -58,6 +60,7 @@ export function EditorPage() {
   });
 
   useGlbDisplayControls();
+  useSceneDisplayControls();
   useDebugDisplayControls();
   useDebugDrawerControls();
   const { navMeshConfig } = useNavMeshGenerationParametersControls();

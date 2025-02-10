@@ -1,7 +1,11 @@
 import { button, useControls } from "leva";
 import { useSignals } from "@preact/signals-react/runtime";
 
-import { sigalnIsLoading, signalNavMesh } from "../state/signals";
+import {
+  sigalnIsLoading,
+  signalModelBlob,
+  signalNavMesh,
+} from "../state/signals";
 
 export const useNavMeshControls = ({
   generateNavMesh,
@@ -16,7 +20,7 @@ export const useNavMeshControls = ({
     "NavMesh Actions",
     {
       "Generate NavMesh": button(() => generateNavMesh(), {
-        disabled: sigalnIsLoading.value,
+        disabled: sigalnIsLoading.value || !signalModelBlob.value,
       }),
       "Export as Recast NavMesh": button(exportAsRecastNavMesh, {
         disabled: !signalNavMesh.value,

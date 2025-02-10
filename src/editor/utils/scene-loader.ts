@@ -65,4 +65,6 @@ export function createFilesInput(
 
   filesInput.reload = function () {};
   filesInput.monitorElementForDragNDrop(canvas);
+
+  return filesInput;
 }

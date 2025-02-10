@@ -11,11 +11,12 @@ import {
 import { TAG_MODEL } from "../utils/tags";
 import { Tags } from "@babylonjs/core/Misc/tags";
 import { zoomOnScene } from "../utils/camera";
+import { Mesh } from "@babylonjs/core";
 
 export function subscribeModelBlob(editor: EditorScene) {
   // TODO: unsubscribe
   signalModelBlob.subscribe(async (blob) => {
-    editor._removeExistingModels();
+    editor.removeExistingModels();
 
     // editor._resetCamera();
 
@@ -25,7 +26,7 @@ export function subscribeModelBlob(editor: EditorScene) {
 
     let loaded: Nullable<ISceneLoaderAsyncResult> = null;
     if (blob instanceof Blob) {
-      loaded = await loadModelFromBlob(blob, "model.glb", editor._scene);
+      loaded = await loadModelFromBlob(blob, "model.glb", editor.scene);
     } else {
       if (blob === DefaultGlbSize.Big) {
         loaded = await loadDefaultGlbBig();
@@ -34,11 +35,19 @@ export function subscribeModelBlob(editor: EditorScene) {
       }
     }
 
-    for (const m of loaded?.meshes ?? []) {
+    if (!loaded) {
+      console.error("File not loaded.");
+      return;
+    }
+
+    editor.root = loaded.meshes[0] as Mesh;
+
+    for (const m of loaded.meshes ?? []) {
       m.isPickable = false;
       Tags.AddTagsTo(m, TAG_MODEL);
     }
 
-    zoomOnScene(editor._scene, editor._camera);
+    editor.recalcScalinfFromLoadedModel();
+    zoomOnScene(editor.scene, editor.camera);
   });
 }

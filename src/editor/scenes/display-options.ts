@@ -9,14 +9,14 @@ export function subscribeDisplayOptions(editor: EditorScene) {
       return;
     }
 
-    editor._navMeshGeneratorInputMesh?.setEnabled(
+    editor.navMeshGeneratorInputMesh?.setEnabled(
       options.displayNavMeshGenerationInput
     );
-    editor._navMeshGeneratorInputMeshMaterial.wireframe =
+    editor.navMeshGeneratorInputMeshMaterial.wireframe =
       options.navMeshGeneratorInputWireframe;
-    editor._navMeshGeneratorInputMeshMaterial.alpha =
+    editor.navMeshGeneratorInputMeshMaterial.alpha =
       options.navMeshGeneratorInputOpacity;
-    editor._navMeshGeneratorInputMeshMaterial.emissiveColor =
+    editor.navMeshGeneratorInputMeshMaterial.emissiveColor =
       Color3.FromHexString(options.navMeshGeneratorInputDebugColor);
   });
 }

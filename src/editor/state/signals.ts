@@ -42,11 +42,13 @@ const signalModelBlob = signal<Blob | null | DefaultGlbSize>(null);
 const signalNavMeshParameters = signal<NavMeshParameters>();
 const signalNavMesh = signal<NavMesh | null>(null);
 
-const signalDisplayModel = signal(true); // TODO: refactor
-
 const signGlbDisplayOptions = signal<{
   displayModel: boolean;
+}>();
+
+const signalSceneDisplayOptions = signal<{
   displayGround: boolean;
+  displayAxis: boolean;
 }>();
 
 const signalDebugDisplayOptions = signal<{
@@ -93,7 +95,7 @@ export {
   signalTestAgentStart,
   signalTestAgentTarget,
   //
-  signalDisplayModel,
+  signalSceneDisplayOptions,
   signalDebugDisplayOptions,
   signalDebugDrawerControls,
   signalGeneratorIntermediates,

@@ -9,8 +9,8 @@ import { EditorScene } from "./EditorScene";
 
 export function subscribeIndexedTriangleInputMeshData(editor: EditorScene) {
   signalIndexedTriangleInputMeshData.subscribe((data) => {
-    if (editor._navMeshGeneratorInputMesh) {
-      editor._navMeshGeneratorInputMesh.dispose();
+    if (editor.navMeshGeneratorInputMesh) {
+      editor.navMeshGeneratorInputMesh.dispose();
     }
 
     if (!data) {
@@ -25,11 +25,11 @@ export function subscribeIndexedTriangleInputMeshData(editor: EditorScene) {
     vertexData.positions = data.positions;
     vertexData.indices = data.indices;
 
-    editor._navMeshGeneratorInputMesh = new Mesh("nav-mesh-input");
-    vertexData.applyToMesh(editor._navMeshGeneratorInputMesh);
+    editor.navMeshGeneratorInputMesh = new Mesh("nav-mesh-input");
+    vertexData.applyToMesh(editor.navMeshGeneratorInputMesh);
 
-    editor._navMeshGeneratorInputMesh.material =
-      editor._navMeshGeneratorInputMeshMaterial;
+    editor.navMeshGeneratorInputMesh.material =
+      editor.navMeshGeneratorInputMeshMaterial;
 
     signalDebugDisplayOptions.value = { ...signalDebugDisplayOptions.peek() };
   });

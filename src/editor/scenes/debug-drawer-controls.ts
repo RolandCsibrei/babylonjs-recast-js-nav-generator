@@ -1,25 +1,33 @@
 import { drawDebug } from "../../plugin/debug-drawer";
-import { RecastNavigationJSPluginDebug } from "../../plugin/RecastNavigationJSPluginDebug";
 import {
   signalDebugDrawerControls,
   signalGeneratorIntermediates,
   signalNavMesh,
 } from "../state/signals";
+import { EditorScene } from "./EditorScene";
 
-export function subscribeDebugDrawerControls() {
-  const debug = new RecastNavigationJSPluginDebug();
-
+export function subscribeDebugDrawerControls(editor: EditorScene) {
   signalDebugDrawerControls.subscribe((controls) => {
     const navMesh = signalNavMesh.peek();
-    if (!debug || !navMesh || !controls?.navMeshDebugDrawOption) {
+    if (
+      !editor.navigationDebug ||
+      !navMesh ||
+      !controls?.navMeshDebugDrawOption
+    ) {
       return;
     }
 
-    drawDebug(
-      debug,
-      navMesh,
-      controls.navMeshDebugDrawOption,
-      signalGeneratorIntermediates.peek()
+    editor.navigationDebug?.debugDrawerParent.setEnabled(
+      controls.navMeshDebugDraw
     );
+
+    if (controls.navMeshDebugDraw) {
+      drawDebug(
+        editor.navigationDebug,
+        navMesh,
+        controls.navMeshDebugDrawOption,
+        signalGeneratorIntermediates.peek()
+      );
+    }
   });
 }
