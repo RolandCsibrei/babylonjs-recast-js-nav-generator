@@ -10,10 +10,16 @@ import { signalClipPlanes, SignalSub } from "../state/signals";
 import { Nullable } from "@babylonjs/core/types";
 import { Observer } from "@babylonjs/core/Misc/observable";
 import { Scene } from "@babylonjs/core/scene";
+import { Mesh } from "@babylonjs/core/Meshes/mesh";
 
 let signalClipPlanesSub: Nullable<SignalSub> = null;
 let clipPlanesOnBeforeRenderObserver: Nullable<Observer<Scene>> = null;
+let plane1: Nullable<Mesh> = null;
+let plane2: Nullable<Mesh> = null;
+let gizmo1: Nullable<AxisDragGizmo> = null;
+let gizmo2: Nullable<AxisDragGizmo> = null;
 
+// TODO: refactor in phase 2 w/o to need to unsubscribe and the let variables
 export function unsubscribeClipPlanes(editor: EditorScene) {
   signalClipPlanesSub?.();
   signalClipPlanesSub = null;
@@ -24,6 +30,26 @@ export function unsubscribeClipPlanes(editor: EditorScene) {
     );
     clipPlanesOnBeforeRenderObserver = null;
   }
+
+  if (plane1) {
+    plane1.dispose(true, true);
+    plane1 = null;
+  }
+
+  if (plane2) {
+    plane2.dispose(true, true);
+    plane2 = null;
+  }
+
+  if (gizmo1) {
+    gizmo1.dispose();
+    gizmo1 = null;
+  }
+
+  if (gizmo2) {
+    gizmo2.dispose();
+    gizmo2 = null;
+  }
 }
 
 export function subscribeClipPlanes(editor: EditorScene) {
@@ -32,85 +58,87 @@ export function subscribeClipPlanes(editor: EditorScene) {
     return;
   }
 
-  const utilLayer = new UtilityLayerRenderer(editor.scene);
+  let clipPlane1: Plane, clipPlane2: Plane;
+  let useClipPlanes = false;
 
-  const height = Math.abs(rootBB.max.x - rootBB.min.x);
-  const width = Math.abs(rootBB.max.z - rootBB.min.z);
+  if (!plane1 || !plane2) {
+    const utilLayer = new UtilityLayerRenderer(editor.scene);
 
-  const gizmo1 = new AxisDragGizmo(
-    new Vector3(0, 1, 0),
-    Color3.Green(),
-    utilLayer
-  );
-  gizmo1.updateGizmoRotationToMatchAttachedMesh = false;
-  gizmo1.updateGizmoPositionToMatchAttachedMesh = true;
+    const height = Math.abs(rootBB.max.x - rootBB.min.x);
+    const width = Math.abs(rootBB.max.z - rootBB.min.z);
 
-  let clipPlane1 = Plane.FromPositionAndNormal(
-    new Vector3(0, 1, 0),
-    new Vector3(0, 1, 0)
-  );
-  const plane1 = CreatePlane("clip-plane-1", {
-    width,
-    height,
-    sourcePlane: clipPlane1,
-  });
-  const plane1Material = new StandardMaterial("plane1");
-  plane1.visibility = 0.03;
-  plane1Material.backFaceCulling = false;
-  plane1.material = plane1Material;
-  gizmo1.attachedMesh = plane1;
+    gizmo1 = new AxisDragGizmo(new Vector3(0, 1, 0), Color3.Green(), utilLayer);
+    gizmo1.updateGizmoRotationToMatchAttachedMesh = false;
+    gizmo1.updateGizmoPositionToMatchAttachedMesh = true;
 
-  //
+    clipPlane1 = Plane.FromPositionAndNormal(
+      new Vector3(0, 1, 0),
+      new Vector3(0, 1, 0)
+    );
+    plane1 = CreatePlane("clip-plane-1", {
+      width,
+      height,
+      sourcePlane: clipPlane1,
+    });
+    const plane1Material = new StandardMaterial("plane1");
+    plane1.visibility = 0.03;
+    plane1Material.backFaceCulling = false;
+    plane1.material = plane1Material;
+    gizmo1.attachedMesh = plane1;
 
-  const gizmo2 = new AxisDragGizmo(
-    new Vector3(0, -1, 0),
-    Color3.Green(),
-    utilLayer
-  );
-  gizmo2.updateGizmoRotationToMatchAttachedMesh = false;
-  gizmo2.updateGizmoPositionToMatchAttachedMesh = true;
+    //
 
-  let clipPlane2 = Plane.FromPositionAndNormal(
-    new Vector3(0, 1, 0),
-    new Vector3(0, -1, 0)
-  );
-  const plane2 = CreatePlane("clip-plane-2", {
-    width,
-    height,
-    sourcePlane: clipPlane1,
-  });
-  const plane2Material = new StandardMaterial("plane2");
-  plane2.visibility = 0.03;
-  plane2Material.backFaceCulling = false;
-  plane2.material = plane2Material;
-  gizmo2.attachedMesh = plane2;
+    gizmo2 = new AxisDragGizmo(
+      new Vector3(0, -1, 0),
+      Color3.Green(),
+      utilLayer
+    );
+    gizmo2.updateGizmoRotationToMatchAttachedMesh = false;
+    gizmo2.updateGizmoPositionToMatchAttachedMesh = true;
 
-  if (rootBB) {
-    plane1.position.x =
-      rootBB.min.x + Math.abs(rootBB.max.x - rootBB.min.x) / 2; // if we got rootBB we get root as well
-    plane1.position.y = rootBB.max.y - 1;
-    plane1.position.z =
-      rootBB.min.z + +Math.abs(rootBB.max.z - rootBB.min.z) / 2;
+    clipPlane2 = Plane.FromPositionAndNormal(
+      new Vector3(0, 1, 0),
+      new Vector3(0, -1, 0)
+    );
+    plane2 = CreatePlane("clip-plane-2", {
+      width,
+      height,
+      sourcePlane: clipPlane1,
+    });
+    const plane2Material = new StandardMaterial("plane2");
+    plane2.visibility = 0.03;
+    plane2Material.backFaceCulling = false;
+    plane2.material = plane2Material;
+    gizmo2.attachedMesh = plane2;
 
-    plane2.position.x = plane1.position.x;
-    plane2.position.y = rootBB.min.y + 1;
-    plane2.position.z = plane1.position.z;
+    if (rootBB) {
+      plane1.position.x =
+        rootBB.min.x + Math.abs(rootBB.max.x - rootBB.min.x) / 2; // if we got rootBB we get root as well
+      plane1.position.y = rootBB.max.y - 1;
+      plane1.position.z =
+        rootBB.min.z + +Math.abs(rootBB.max.z - rootBB.min.z) / 2;
+
+      plane2.position.x = plane1.position.x;
+      plane2.position.y = rootBB.min.y + 1;
+      plane2.position.z = plane1.position.z;
+    }
+
+    //
+    signalClipPlanesSub = signalClipPlanes.subscribe((options) => {
+      useClipPlanes = options?.useClipPlanes ?? false;
+
+      plane1!.setEnabled(useClipPlanes);
+      gizmo1!.attachedMesh = useClipPlanes ? plane1 : null;
+
+      plane2!.setEnabled(useClipPlanes);
+      gizmo2!.attachedMesh = useClipPlanes ? plane2 : null;
+    });
   }
 
   //
-  let useClipPlanes = false;
-  signalClipPlanesSub = signalClipPlanes.subscribe((options) => {
-    useClipPlanes = options?.useClipPlanes ?? false;
 
-    plane1.setEnabled(useClipPlanes);
-    gizmo1.attachedMesh = useClipPlanes ? plane1 : null;
-
-    plane2.setEnabled(useClipPlanes);
-    gizmo2.attachedMesh = useClipPlanes ? plane2 : null;
-  });
-
-  //
-
+  const oldPositionY1 = plane1.position.y;
+  const oldPositionY2 = plane2.position.y;
   clipPlanesOnBeforeRenderObserver = editor.scene.onBeforeRenderObservable.add(
     () => {
       // const matrix1 = Matrix.Translation(0, plane1.position.y, 0);
@@ -121,43 +149,51 @@ export function subscribeClipPlanes(editor: EditorScene) {
 
       // console.log(clipPlane1.asArray());
 
-      if (!editor.navigationDebug) {
+      if (!editor.navigationDebug || !plane1 || !plane2) {
         return;
       }
 
       if (useClipPlanes) {
-        clipPlane1 = Plane.FromPositionAndNormal(
-          new Vector3(0, plane1.position.y, 0),
-          new Vector3(0, 1, 0)
-        );
-        editor.navigationDebug.triMaterial.clipPlane = clipPlane1;
-        for (const m of editor.navigationDebug.lineMaterials) {
-          m.clipPlane = clipPlane1;
+        if (oldPositionY1 !== plane1!.position.y) {
+          clipPlane1 = Plane.FromPositionAndNormal(
+            new Vector3(0, plane1.position.y, 0),
+            new Vector3(0, 1, 0)
+          );
+          editor.navigationDebug.triMaterial.clipPlane = clipPlane1;
+          for (const m of editor.navigationDebug.lineMaterials) {
+            m.clipPlane = clipPlane1;
+          }
+          editor.navigationDebug.pointMaterial.clipPlane = clipPlane1;
         }
-        editor.navigationDebug.pointMaterial.clipPlane = clipPlane1;
 
-        clipPlane2 = Plane.FromPositionAndNormal(
-          new Vector3(0, plane2.position.y, 0),
-          new Vector3(0, -1, 0)
-        );
-        editor.navigationDebug.triMaterial.clipPlane2 = clipPlane2;
-        for (const m of editor.navigationDebug.lineMaterials) {
-          m.clipPlane2 = clipPlane2;
+        if (oldPositionY2 !== plane2!.position.y) {
+          clipPlane2 = Plane.FromPositionAndNormal(
+            new Vector3(0, plane2.position.y, 0),
+            new Vector3(0, -1, 0)
+          );
+          editor.navigationDebug.triMaterial.clipPlane2 = clipPlane2;
+          for (const m of editor.navigationDebug.lineMaterials) {
+            m.clipPlane2 = clipPlane2;
+          }
+          editor.navigationDebug.pointMaterial.clipPlane2 = clipPlane2;
         }
-        editor.navigationDebug.pointMaterial.clipPlane2 = clipPlane2;
       } else {
-        editor.navigationDebug.triMaterial.clipPlane = null;
-        editor.navigationDebug.triMaterial.clipPlane2 = clipPlane2;
-        for (const m of editor.navigationDebug.lineMaterials) {
-          m.clipPlane = null;
+        if (editor.navigationDebug.triMaterial.clipPlane !== null) {
+          editor.navigationDebug.triMaterial.clipPlane = null;
+          editor.navigationDebug.triMaterial.clipPlane2 = clipPlane2;
+          for (const m of editor.navigationDebug.lineMaterials) {
+            m.clipPlane = null;
+          }
+          editor.navigationDebug.pointMaterial.clipPlane = null;
         }
-        editor.navigationDebug.pointMaterial.clipPlane = null;
 
-        editor.navigationDebug.triMaterial.clipPlane2 = null;
-        for (const m of editor.navigationDebug.lineMaterials) {
-          m.clipPlane2 = null;
+        if (editor.navigationDebug.triMaterial.clipPlane2 !== null) {
+          editor.navigationDebug.triMaterial.clipPlane2 = null;
+          for (const m of editor.navigationDebug.lineMaterials) {
+            m.clipPlane2 = null;
+          }
+          editor.navigationDebug.pointMaterial.clipPlane2 = null;
         }
-        editor.navigationDebug.pointMaterial.clipPlane2 = null;
       }
     }
   );

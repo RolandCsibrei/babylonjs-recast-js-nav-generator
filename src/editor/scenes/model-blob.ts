@@ -12,18 +12,18 @@ import { TAG_MODEL } from "../utils/tags";
 import { Tags } from "@babylonjs/core/Misc/tags";
 import { zoomOnScene } from "../utils/camera";
 import { Mesh } from "@babylonjs/core";
-import { subscribeClipPlanes, unsubscribeClipPlanes } from "./clip-planes";
+import { unsubscribeClipPlanes } from "./clip-planes";
 
 export function subscribeModelBlob(editor: EditorScene) {
   // TODO: unsubscribe?
   signalModelBlob.subscribe(async (blob) => {
     editor.resetScene();
 
+    unsubscribeClipPlanes(editor);
+
     if (!blob) {
       return;
     }
-
-    unsubscribeClipPlanes(editor);
 
     let loaded: Nullable<ISceneLoaderAsyncResult> = null;
     if (blob instanceof Blob) {

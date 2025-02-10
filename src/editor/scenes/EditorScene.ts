@@ -43,7 +43,6 @@ import { subscribeIndexedTriangleInputMeshData } from "./indexed-triangle-input-
 import { subscribeDisplayModel } from "./display-model";
 import { subscribeDisplayOptions } from "./display-options";
 import { subscribeDebugDrawerControls } from "./debug-drawer-controls";
-import { unsubscribeClipPlanes } from "./clip-planes";
 import {
   agentControlsToAgentParameters,
   subscribeTestAgent,
@@ -171,6 +170,9 @@ export class EditorScene {
   }
 
   public resetScene() {
+    this.navigationDebug?.reset();
+    signalNavMesh.value?.destroy();
+    signalNavMesh.value = null;
     this.removeExistingModels();
     this._resetCamera();
   }
@@ -185,13 +187,6 @@ export class EditorScene {
     groundMesh.position.y = -0.01;
     groundMesh.visibility = 0.8;
     return groundMesh;
-  }
-
-  private _createDebugNavMeshMaterial() {
-    const material = new StandardMaterial("nav-mesh-debug");
-    material.emissiveColor = Color3.Yellow();
-    material.disableLighting = true;
-    return material;
   }
 
   private _createnavMeshGeneratorInputMeshMaterial() {

@@ -1,4 +1,3 @@
-import { Vector3 } from "@babylonjs/core/Maths/math.vector";
 import { signalSceneDisplayOptions } from "../state/signals";
 import { EditorScene } from "./EditorScene";
 
