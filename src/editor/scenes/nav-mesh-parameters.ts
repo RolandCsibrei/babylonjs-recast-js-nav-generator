@@ -18,6 +18,7 @@ export function subscribeNavMeshParamaters(editor: EditorScene) {
       disposeCrowd(editor);
 
       signalNavMesh.value?.destroy();
+      signalNavMesh.value = null;
 
       editor.navigation.createNavMesh(
         editor.getMeshesForNavMeshCreation(),
