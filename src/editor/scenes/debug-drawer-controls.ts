@@ -1,9 +1,4 @@
-import { drawDebug } from "../../plugin/debug-drawer";
-import {
-  signalDebugDrawerControls,
-  signalGeneratorIntermediates,
-  signalNavMesh,
-} from "../state/signals";
+import { signalDebugDrawerControls, signalNavMesh } from "../state/signals";
 import { EditorScene } from "./EditorScene";
 
 export function subscribeDebugDrawerControls(editor: EditorScene) {
@@ -22,12 +17,7 @@ export function subscribeDebugDrawerControls(editor: EditorScene) {
     );
 
     if (controls.navMeshDebugDraw) {
-      drawDebug(
-        editor.navigationDebug,
-        navMesh,
-        controls.navMeshDebugDrawOption,
-        signalGeneratorIntermediates.peek()
-      );
+      editor.drawDebug();
     }
   });
 }

@@ -18,7 +18,12 @@ import { CreateCapsule } from "@babylonjs/core/Meshes/Builders/capsuleBuilder";
 import { Nullable } from "@babylonjs/core/types";
 import { FilesInput } from "@babylonjs/core/Misc/filesInput";
 
-import { AgentControls } from "../state/signals";
+import {
+  AgentControls,
+  signalDebugDrawerControls,
+  signalGeneratorIntermediates,
+  signalNavMesh,
+} from "../state/signals";
 
 import { createFilesInput } from "../utils/scene-loader";
 
@@ -38,7 +43,7 @@ import { subscribeIndexedTriangleInputMeshData } from "./indexed-triangle-input-
 import { subscribeDisplayModel } from "./display-model";
 import { subscribeDisplayOptions } from "./display-options";
 import { subscribeDebugDrawerControls } from "./debug-drawer-controls";
-import { subscribeClipPlanes } from "./clip-planes";
+import { unsubscribeClipPlanes } from "./clip-planes";
 import {
   agentControlsToAgentParameters,
   subscribeTestAgent,
@@ -46,6 +51,7 @@ import {
 } from "./crowd-agent";
 import { subscribeDisplayScenel } from "./display-scene";
 import { AxesViewer } from "@babylonjs/core/Debug/axesViewer";
+import { drawDebug } from "../../plugin/debug-drawer";
 
 export const MAIN_LIGHT_NAME = "main-light";
 
@@ -60,7 +66,7 @@ export class EditorScene {
   public root: Nullable<Mesh> = null;
   public filesInput: Nullable<FilesInput> = null;
 
-  public debugNavMeshMaterial: StandardMaterial;
+  // public debugNavMeshMaterial: StandardMaterial;
   public navMeshGeneratorInputMeshMaterial: StandardMaterial;
   public navMeshGeneratorInputMesh: Nullable<Mesh> = null;
   public scaling = new Vector3(1, 1, 1); // calculated from the loaded model bounds, used to scale addiitonal controls on the scene
@@ -92,7 +98,7 @@ export class EditorScene {
     this.light = light;
     this.ui = AdvancedDynamicTexture.CreateFullscreenUI("ui");
 
-    this.debugNavMeshMaterial = this._createDebugNavMeshMaterial();
+    // this.debugNavMeshMaterial = this._createDebugNavMeshMaterial();
     this.navMeshGeneratorInputMeshMaterial =
       this._createnavMeshGeneratorInputMeshMaterial();
   }
@@ -164,6 +170,11 @@ export class EditorScene {
     });
   }
 
+  public resetScene() {
+    this.removeExistingModels();
+    this._resetCamera();
+  }
+
   public _createGround() {
     const groundMesh = CreateGround("ground", { width: 1000, height: 1000 });
     const groundMaterial = new GridMaterial("grid");
@@ -206,12 +217,35 @@ export class EditorScene {
     subscribeDisplayScenel(this);
     subscribeDisplayOptions(this);
     subscribeDebugDrawerControls(this);
-    subscribeClipPlanes(this);
     subscribeTestAgent(this);
   }
 
   private _createDragAndDropLoader() {
     this.filesInput = createFilesInput(this.engine, this.scene, this._canvas);
+  }
+
+  public drawDebug() {
+    if (!this.navigationDebug) {
+      return;
+    }
+
+    const navMesh = signalNavMesh.peek();
+    if (!navMesh) {
+      return;
+    }
+
+    const controls = signalDebugDrawerControls.peek();
+    if (!controls) {
+      return;
+    }
+
+    drawDebug(
+      this.navigationDebug,
+      navMesh,
+      controls.navMeshDebugDrawOption,
+      signalGeneratorIntermediates.peek(),
+      this
+    );
   }
 
   public removeExistingModels() {

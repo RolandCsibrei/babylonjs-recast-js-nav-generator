@@ -1,18 +1,14 @@
 import { useControls } from "leva";
-import { signalClippingPlanes } from "../state/signals";
+import { signalClipPlanes } from "../state/signals";
 import { levaText } from "./plugins/leva-text";
 
 export const useClipPlaneControls = () => {
-  signalClippingPlanes.value = useControls("Cliiping planes", {
+  signalClipPlanes.value = useControls("Clip planes", {
     _: levaText(
-      "You can use the clipping planes to clip portion of your model or the navigation mesh."
+      "You can use the clip planes to clip portion of your model or the navigation mesh."
     ),
-    useClipPlane1: {
-      label: "Use clipping plane Top",
-      value: false,
-    },
-    useClipPlane2: {
-      label: "Use clipping plane Bottom",
+    useClipPlanes: {
+      label: "Use clip planes",
       value: false,
     },
   });

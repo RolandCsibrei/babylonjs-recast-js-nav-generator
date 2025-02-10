@@ -31,6 +31,8 @@ export enum DefaultGlbSize {
   Big = "b",
 }
 
+export type SignalSub = (() => void) | undefined;
+
 type XYZ = { x: number; y: number; z: number };
 
 const sigalnIsLoading = signal(false);
@@ -62,10 +64,9 @@ const signalTestAgentControls = signal<AgentControls>();
 const signalTestAgentStart = signal<XYZ>();
 const signalTestAgentTarget = signal<XYZ>();
 
-const signalClippingPlanes = signal<
+const signalClipPlanes = signal<
   Partial<{
-    useClipPlane1: boolean;
-    useClipPlane2: boolean;
+    useClipPlanes: boolean;
   }>
 >();
 
@@ -101,5 +102,5 @@ export {
   signalGeneratorIntermediates,
   signalIndexedTriangleInputMeshData,
   signGlbDisplayOptions,
-  signalClippingPlanes,
+  signalClipPlanes,
 };

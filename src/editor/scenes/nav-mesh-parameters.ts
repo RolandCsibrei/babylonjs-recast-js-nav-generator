@@ -1,5 +1,4 @@
 import {
-  signalDebugDrawerControls,
   signalGeneratorIntermediates,
   signalIndexedTriangleInputMeshData,
   signalNavMesh,
@@ -9,7 +8,6 @@ import { disposeCrowd } from "./crowd-agent";
 import { EditorScene } from "./EditorScene";
 
 export function subscribeNavMeshParamaters(editor: EditorScene) {
-  // let debugNavMesh: Nullable<Mesh> = null;
   signalNavMeshParameters.subscribe(async (navMeshParams) => {
     if (!navMeshParams || !editor.navigation) {
       return;
@@ -18,11 +16,6 @@ export function subscribeNavMeshParamaters(editor: EditorScene) {
     // generate the navmesh
     try {
       disposeCrowd(editor);
-
-      // remove the old debugnnav mesh if exists
-      // if (debugNavMesh) {
-      //   debugNavMesh.dispose();
-      // }
 
       editor.navigation.createNavMesh(
         editor.getMeshesForNavMeshCreation(),
@@ -39,13 +32,7 @@ export function subscribeNavMeshParamaters(editor: EditorScene) {
         editor.navigation.intermediates ?? null;
 
       // generate the new debug navmesh
-      signalDebugDrawerControls.value = {
-        ...signalDebugDrawerControls.peek(),
-      };
-
-      // debugNavMesh = editor._navigation.createDebugNavMesh(editor._scene);
-      // debugNavMesh.name = NAV_MESH_DEBUG_NAME;
-      // debugNavMesh.material = editor._debugNavMeshMaterial;
+      editor.drawDebug();
     } catch (error) {
       console.error(error);
       signalNavMesh.value = null;

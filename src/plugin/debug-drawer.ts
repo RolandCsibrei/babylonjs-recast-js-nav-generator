@@ -26,6 +26,8 @@ import {
 
 import { RecastNavigationJSPluginDebug } from "./RecastNavigationJSPluginDebug";
 import { GeneratorIntermediates } from "../editor/state/signals";
+import { EditorScene } from "../editor/scenes/EditorScene";
+import { subscribeClipPlanes } from "../editor/scenes/clip-planes";
 
 const getIntermediates = (intermediates: GeneratorIntermediates) => {
   const heightfieldList: RecastHeightfield[] = [];
@@ -103,7 +105,8 @@ export function drawDebug(
   debug: RecastNavigationJSPluginDebug,
   navMesh: NavMesh,
   option: DebugDrawerOptions,
-  intermediates: GeneratorIntermediates
+  intermediates: GeneratorIntermediates,
+  editor: EditorScene
 ) {
   debug.reset();
 
@@ -156,4 +159,6 @@ export function drawDebug(
   } else if (option === DebugDrawerOption.NAVMESH_BV_TREE) {
     debug.drawNavMeshBVTree(navMesh);
   }
+
+  subscribeClipPlanes(editor);
 }
