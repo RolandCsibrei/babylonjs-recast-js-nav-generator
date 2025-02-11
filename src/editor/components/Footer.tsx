@@ -30,11 +30,11 @@ const FooterContainer = styled.footer`
   }
 
   :nth-child(2) {
-    text-align: center;
+    text-align: left;
   }
 
   :nth-child(3) {
-    text-align: right;
+    text-align: center;
   }
 `;
 
@@ -58,7 +58,16 @@ const GithubSvg = () => (
 export const Footer = () => {
   return (
     <FooterContainer>
-      <div>NavMesh Editor v1.0</div>
+      <div>
+        <a
+          title="babylon.js NavMesh Editor"
+          target="_blank"
+          href="https://github.com/RolandCsibrei/babylonjs-recast-navigation-js-editor"
+        >
+          <GithubSvg />
+        </a>
+        &nbsp;&nbsp;babylon.js NavMesh Editor v1.0
+      </div>
 
       <div>
         Powered by{" "}
@@ -71,16 +80,6 @@ export const Footer = () => {
         &nbsp;and&nbsp;
         <a target="_blank" href="https://babylonjs.com">
           babylon.js
-        </a>
-      </div>
-
-      <div>
-        <a
-          title="babylon.js NavMesh Editor"
-          target="_blank"
-          href="https://github.com/RolandCsibrei/babylonjs-recast-navigation-js-editor"
-        >
-          <GithubSvg />
         </a>
       </div>
     </FooterContainer>
