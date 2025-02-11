@@ -555,14 +555,14 @@ export class RecastNavigationJSPlugin implements INavigationEnginePluginV2 {
       const navMeshResult =
         "tileSize" in config
           ? generateTiledNavMesh(
-              this._positions,
-              this._indices,
+              positions,
+              indices,
               config as TiledNavMeshGeneratorConfig,
               parameters.keepIntermediates
             )
           : generateSoloNavMesh(
-              this._positions,
-              this._indices,
+              positions,
+              indices,
               config,
               parameters.keepIntermediates
             );

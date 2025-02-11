@@ -82,6 +82,7 @@ export function subscribeClipPlanes(editor: EditorScene) {
     });
     const plane1Material = new StandardMaterial("plane1");
     plane1.visibility = 0.03;
+    plane1.isPickable = false;
     plane1Material.backFaceCulling = false;
     plane1.material = plane1Material;
     gizmo1.attachedMesh = plane1;
@@ -107,6 +108,7 @@ export function subscribeClipPlanes(editor: EditorScene) {
     });
     const plane2Material = new StandardMaterial("plane2");
     plane2.visibility = 0.03;
+    plane2.isPickable = false;
     plane2Material.backFaceCulling = false;
     plane2.material = plane2Material;
     gizmo2.attachedMesh = plane2;

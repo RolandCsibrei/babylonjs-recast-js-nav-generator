@@ -63,10 +63,11 @@ export function subscribeTestAgent(editor: EditorScene) {
       },
       {
         color: lineColor,
-        width: 0.2,
+        width: 0.4,
       }
     );
-    pathLine.renderingGroupId = 2;
+    pathLine.position.y += 1;
+    // pathLine.renderingGroupId = 2;
   });
 }
 

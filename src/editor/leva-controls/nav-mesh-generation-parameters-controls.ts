@@ -13,7 +13,9 @@ export const useNavMeshGenerationParametersControls = () => {
     },
     tileSize: {
       label: "Tile Size",
-      value: 0,
+      value: 32,
+      min: 2,
+      max: 256,
       step: 1,
     },
     borderSize: {

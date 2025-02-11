@@ -20,6 +20,10 @@ export function subscribeNavMeshParamaters(editor: EditorScene) {
       signalNavMesh.value?.destroy();
       signalNavMesh.value = null;
 
+      editor.navigation.navMeshQuery?.destroy();
+      // editor.navigation.navMesh?.destroy();
+      debugger;
+
       editor.navigation.createNavMesh(
         editor.getMeshesForNavMeshCreation(),
         navMeshParams

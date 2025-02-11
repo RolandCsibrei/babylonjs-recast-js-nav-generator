@@ -1,3 +1,7 @@
+import {
+  GreasedLineMaterialOptions,
+  GreasedLineMeshOptions,
+} from "@babylonjs/core";
 import { StandardMaterial } from "@babylonjs/core/Materials/standardMaterial";
 import { Color3 } from "@babylonjs/core/Maths/math.color";
 import { Matrix } from "@babylonjs/core/Maths/math.vector";
@@ -31,18 +35,33 @@ export class RecastNavigationJSPluginDebug {
   public debugDrawerParent = new TransformNode("debugDrawerParent");
 
   private debugDrawerUtils: DebugDrawerUtils;
-  constructor() {
+  constructor(materials?: {
+    triMaterial?: StandardMaterial;
+    pointMaterial?: StandardMaterial;
+    lineMaterials: {
+      graasedLineMaterialOptions: GreasedLineMaterialOptions;
+      graasedLineMeshlOptions: GreasedLineMeshOptions;
+    };
+  }) {
     this.debugDrawerUtils = new DebugDrawerUtils();
 
     this.debugDrawerParent.position.y += 0.01;
 
-    this.triMaterial = new StandardMaterial("triMaterial");
-    this.triMaterial.backFaceCulling = false;
-    this.triMaterial.specularColor = Color3.Black();
+    if (materials?.triMaterial) {
+      this.triMaterial = materials.triMaterial;
+    } else {
+      this.triMaterial = new StandardMaterial("triMaterial");
+      this.triMaterial.backFaceCulling = false;
+      this.triMaterial.specularColor = Color3.Black();
+    }
 
-    this.pointMaterial = new StandardMaterial("pointMaterial");
-    this.pointMaterial.backFaceCulling = false;
-    this.pointMaterial.specularColor = Color3.Black();
+    if (materials?.pointMaterial) {
+      this.pointMaterial = materials.pointMaterial;
+    } else {
+      this.pointMaterial = new StandardMaterial("pointMaterial");
+      this.pointMaterial.backFaceCulling = false;
+      this.pointMaterial.specularColor = Color3.Black();
+    }
 
     this._pointMesh = CreateDisc("point", { radius: 0.02, tessellation: 8 });
     this._pointMesh.billboardMode = Mesh.BILLBOARDMODE_ALL;
@@ -132,6 +151,12 @@ export class RecastNavigationJSPluginDebug {
     const primitives = this.debugDrawerUtils.drawNavMesh(mesh, flags);
     this.drawPrimitives(primitives);
   }
+
+  // todo:
+  // - drawTileCacheLayerAreas
+  // - drawTileCacheLayerRegions
+  // - drawTileCacheContours
+  // - drawTileCachePolyMesh
 
   drawNavMeshWithClosedList(
     mesh: NavMesh,
