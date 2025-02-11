@@ -24,7 +24,7 @@ Phase 1:
 - [x] Add drag and drop support to load the model
 - [x] Add AxisViewer
 - [x] Add various display options for the debug navmesh - debug drawer
-- [x] Relative sizes of the agent mesh and on scene controls and line width to the model size
+- [x] Relative sizes of on scene controls to the model size
 
 Phase 2:
 
