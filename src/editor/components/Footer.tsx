@@ -7,7 +7,6 @@ const FooterContainer = styled.footer`
   width: 100%;
 
   display: flex;
-  justify-content: space-between;
   align-items: center;
 
   box-sizing: border-box;
@@ -15,26 +14,15 @@ const FooterContainer = styled.footer`
   font-size: 0.95rem;
   font-weight: 300;
 
-  color: #efefef;
-
-  a {
-    color: #efefef;
-  }
+  color: #aaa;
 
   div {
-    width: 100%;
+    display: flex;
+    align-items: center; /* Ensures child elements (SVG & text) align vertically */
+    gap: 8px; /* Adds spacing between the SVG and the text */
   }
-
-  :nth-child(1) {
-    text-align: left;
-  }
-
-  :nth-child(2) {
-    text-align: left;
-  }
-
-  :nth-child(3) {
-    text-align: center;
+  a {
+    color: #ccc;
   }
 `;
 
@@ -66,11 +54,7 @@ export const Footer = () => {
         >
           <GithubSvg />
         </a>
-        &nbsp;&nbsp;babylon.js NavMesh Editor v1.0
-      </div>
-
-      <div>
-        Powered by{" "}
+        babylon.js NavMesh Editor v1.0.&nbsp;&nbsp;Powered by{" "}
         <a
           target="_blank"
           href="https://github.com/isaac-mason/recast-navigation-js"

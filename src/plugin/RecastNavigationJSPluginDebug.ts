@@ -1,12 +1,10 @@
-import {
-  GreasedLineMaterialOptions,
-  GreasedLineMeshOptions,
-} from "@babylonjs/core";
+import { GreasedLineMaterialOptions } from "@babylonjs/core/Materials/GreasedLine/greasedLineMaterialInterfaces";
 import { StandardMaterial } from "@babylonjs/core/Materials/standardMaterial";
 import { Color3 } from "@babylonjs/core/Maths/math.color";
 import { Matrix } from "@babylonjs/core/Maths/math.vector";
 import { CreateDisc } from "@babylonjs/core/Meshes/Builders/discBuilder";
 import { CreateGreasedLine } from "@babylonjs/core/Meshes/Builders/greasedLineBuilder";
+import { GreasedLineMeshOptions } from "@babylonjs/core/Meshes/GreasedLine/greasedLineBaseMesh";
 import { Mesh } from "@babylonjs/core/Meshes/mesh";
 import { VertexData } from "@babylonjs/core/Meshes/mesh.vertexData";
 import { TransformNode } from "@babylonjs/core/Meshes/transformNode";
@@ -67,11 +65,28 @@ export class RecastNavigationJSPluginDebug {
     this._pointMesh.billboardMode = Mesh.BILLBOARDMODE_ALL;
   }
 
-  drawPrimitives(primitives: DebugDrawerPrimitive[]) {
+  public reset() {
+    for (const child of this.debugDrawerParent.getChildMeshes()) {
+      child.dispose();
+    }
+  }
+
+  public dispose() {
+    this.reset();
+    this.debugDrawerUtils.dispose();
+    this._pointMesh.dispose();
+    this.triMaterial.dispose();
+    this.pointMaterial.dispose();
+    for (const m of this.lineMaterials) {
+      m.dispose();
+    }
+  }
+
+  public drawPrimitives(primitives: DebugDrawerPrimitive[]) {
     for (const primitive of primitives) {
       switch (primitive.type) {
         case "points":
-          this.drawPoints(primitive);
+          this._drawPoints(primitive);
           break;
         case "lines":
           this.drawLines(primitive);
@@ -80,74 +95,80 @@ export class RecastNavigationJSPluginDebug {
           this.drawTris(primitive);
           break;
         case "quads":
-          this.drawQuads(primitive);
+          this._drawQuads(primitive);
           break;
       }
     }
   }
 
-  drawHeightfieldSolid(hf: RecastHeightfield): void {
+  public drawHeightfieldSolid(hf: RecastHeightfield): void {
     const primitives = this.debugDrawerUtils.drawHeightfieldSolid(hf);
     this.drawPrimitives(primitives);
   }
 
-  drawHeightfieldWalkable(hf: RecastHeightfield): void {
+  public drawHeightfieldWalkable(hf: RecastHeightfield): void {
     const primitives = this.debugDrawerUtils.drawHeightfieldWalkable(hf);
     this.drawPrimitives(primitives);
   }
 
-  drawCompactHeightfieldSolid(chf: RecastCompactHeightfield): void {
+  public drawCompactHeightfieldSolid(chf: RecastCompactHeightfield): void {
     const primitives = this.debugDrawerUtils.drawCompactHeightfieldSolid(chf);
     this.drawPrimitives(primitives);
   }
 
-  drawCompactHeightfieldRegions(chf: RecastCompactHeightfield): void {
+  public drawCompactHeightfieldRegions(chf: RecastCompactHeightfield): void {
     const primitives = this.debugDrawerUtils.drawCompactHeightfieldRegions(chf);
     this.drawPrimitives(primitives);
   }
 
-  drawCompactHeightfieldDistance(chf: RecastCompactHeightfield): void {
+  public drawCompactHeightfieldDistance(chf: RecastCompactHeightfield): void {
     const primitives =
       this.debugDrawerUtils.drawCompactHeightfieldDistance(chf);
     this.drawPrimitives(primitives);
   }
 
-  drawHeightfieldLayer(layer: RecastHeightfieldLayer, idx: number): void {
+  public drawHeightfieldLayer(
+    layer: RecastHeightfieldLayer,
+    idx: number
+  ): void {
     const primitives = this.debugDrawerUtils.drawHeightfieldLayer(layer, idx);
     this.drawPrimitives(primitives);
   }
 
-  drawHeightfieldLayers(lset: RecastHeightfieldLayerSet): void {
+  public drawHeightfieldLayers(lset: RecastHeightfieldLayerSet): void {
     const primitives = this.debugDrawerUtils.drawHeightfieldLayers(lset);
     this.drawPrimitives(primitives);
   }
 
-  drawRegionConnections(cset: RecastContourSet, alpha: number = 1): void {
+  public drawRegionConnections(
+    cset: RecastContourSet,
+    alpha: number = 1
+  ): void {
     const primitives = this.debugDrawerUtils.drawRegionConnections(cset, alpha);
     this.drawPrimitives(primitives);
   }
 
-  drawRawContours(cset: RecastContourSet, alpha: number = 1): void {
+  public drawRawContours(cset: RecastContourSet, alpha: number = 1): void {
     const primitives = this.debugDrawerUtils.drawRawContours(cset, alpha);
     this.drawPrimitives(primitives);
   }
 
-  drawContours(cset: RecastContourSet, alpha: number = 1): void {
+  public drawContours(cset: RecastContourSet, alpha: number = 1): void {
     const primitives = this.debugDrawerUtils.drawContours(cset, alpha);
     this.drawPrimitives(primitives);
   }
 
-  drawPolyMesh(mesh: RecastPolyMesh): void {
+  public drawPolyMesh(mesh: RecastPolyMesh): void {
     const primitives = this.debugDrawerUtils.drawPolyMesh(mesh);
     this.drawPrimitives(primitives);
   }
 
-  drawPolyMeshDetail(dmesh: RecastPolyMeshDetail): void {
+  public drawPolyMeshDetail(dmesh: RecastPolyMeshDetail): void {
     const primitives = this.debugDrawerUtils.drawPolyMeshDetail(dmesh);
     this.drawPrimitives(primitives);
   }
 
-  drawNavMesh(mesh: NavMesh, flags: number = 0): void {
+  public drawNavMesh(mesh: NavMesh, flags: number = 0): void {
     const primitives = this.debugDrawerUtils.drawNavMesh(mesh, flags);
     this.drawPrimitives(primitives);
   }
@@ -158,7 +179,7 @@ export class RecastNavigationJSPluginDebug {
   // - drawTileCacheContours
   // - drawTileCachePolyMesh
 
-  drawNavMeshWithClosedList(
+  public drawNavMeshWithClosedList(
     mesh: NavMesh,
     query: NavMeshQuery,
     flags: number = 0
@@ -171,22 +192,26 @@ export class RecastNavigationJSPluginDebug {
     this.drawPrimitives(primitives);
   }
 
-  drawNavMeshNodes(query: NavMeshQuery): void {
+  public drawNavMeshNodes(query: NavMeshQuery): void {
     const primitives = this.debugDrawerUtils.drawNavMeshNodes(query);
     this.drawPrimitives(primitives);
   }
 
-  drawNavMeshBVTree(mesh: NavMesh): void {
+  public drawNavMeshBVTree(mesh: NavMesh): void {
     const primitives = this.debugDrawerUtils.drawNavMeshBVTree(mesh);
     this.drawPrimitives(primitives);
   }
 
-  drawNavMeshPortals(mesh: NavMesh): void {
+  public drawNavMeshPortals(mesh: NavMesh): void {
     const primitives = this.debugDrawerUtils.drawNavMeshPortals(mesh);
     this.drawPrimitives(primitives);
   }
 
-  drawNavMeshPolysWithFlags(mesh: NavMesh, flags: number, col: number): void {
+  public drawNavMeshPolysWithFlags(
+    mesh: NavMesh,
+    flags: number,
+    col: number
+  ): void {
     const primitives = this.debugDrawerUtils.drawNavMeshPolysWithFlags(
       mesh,
       flags,
@@ -195,33 +220,16 @@ export class RecastNavigationJSPluginDebug {
     this.drawPrimitives(primitives);
   }
 
-  drawNavMeshPoly(mesh: NavMesh, ref: number, col: number): void {
+  public drawNavMeshPoly(mesh: NavMesh, ref: number, col: number): void {
     const primitives = this.debugDrawerUtils.drawNavMeshPoly(mesh, ref, col);
     this.drawPrimitives(primitives);
   }
 
-  reset(): void {
-    for (const child of this.debugDrawerParent.getChildMeshes()) {
-      child.dispose();
+  private _drawPoints(primitive: DebugDrawerPrimitive): void {
+    if (primitive.vertices.length === 0) {
+      return;
     }
-  }
 
-  dispose(): void {
-    this.reset();
-
-    this.debugDrawerUtils.dispose();
-
-    this._pointMesh.dispose();
-
-    this.triMaterial.dispose();
-    this.pointMaterial.dispose();
-
-    for (const m of this.lineMaterials) {
-      m.dispose();
-    }
-  }
-
-  private drawPoints(primitive: DebugDrawerPrimitive): void {
     const matricesData = new Float32Array(16 * primitive.vertices.length);
     const colorData = new Float32Array(4 * primitive.vertices.length);
 
@@ -244,6 +252,10 @@ export class RecastNavigationJSPluginDebug {
   }
 
   private drawLines(primitive: DebugDrawerPrimitive): void {
+    if (primitive.vertices.length === 0) {
+      return;
+    }
+
     const points: number[][] = [];
     const colors: Color3[] = [];
 
@@ -273,6 +285,10 @@ export class RecastNavigationJSPluginDebug {
   }
 
   private drawTris(primitive: DebugDrawerPrimitive): void {
+    if (primitive.vertices.length === 0) {
+      return;
+    }
+
     const positions = new Float32Array(primitive.vertices.length * 3);
     const colors = new Float32Array(primitive.vertices.length * 4);
 
@@ -302,7 +318,11 @@ export class RecastNavigationJSPluginDebug {
     customMesh.parent = this.debugDrawerParent;
   }
 
-  private drawQuads(primitive: DebugDrawerPrimitive): void {
+  private _drawQuads(primitive: DebugDrawerPrimitive): void {
+    if (primitive.vertices.length === 0) {
+      return;
+    }
+
     const positions: number[] = [];
     const colors: number[] = [];
     for (let i = 0; i < primitive.vertices.length; i += 4) {
@@ -321,6 +341,7 @@ export class RecastNavigationJSPluginDebug {
     }
 
     const vertexData = new VertexData();
+
     vertexData.positions = positions;
     vertexData.colors = colors;
 

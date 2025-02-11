@@ -25,11 +25,14 @@ Phase 1:
 - [x] Add AxisViewer
 - [x] Add various display options for the debug navmesh - debug drawer
 - [x] Relative sizes of the agent mesh and on scene controls and line width to the model size
-- [ ] Obstacles
 
 Phase 2:
 
+- [ ] Obstacles
 - [ ] Support for single thread, WASM and worker for nav mesh computation
+
+Phase 3:
+
 - [ ] Examples page
 
 This project is a port of <https://github.com/isaac-mason/recast-navigation-js/tree/main/apps/navmesh-website> and uses code from this repo. Thank you Isaac Mason for your excelent work!
