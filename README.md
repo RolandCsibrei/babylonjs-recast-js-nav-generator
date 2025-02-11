@@ -27,6 +27,7 @@ Phase 1:
 - [x] Relative sizes of on scene controls to the model size
 - [ ] Loading state
 - [ ] Use one loader for DND and file input loads
+- [ ] Load any suported model file format
 
 Phase 2:
 
