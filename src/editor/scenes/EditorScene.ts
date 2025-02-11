@@ -169,7 +169,6 @@ export class EditorScene {
   }
 
   public resetNavigatio() {
-    debugger;
     signalNavMeshParameters.value = null;
     signalNavMesh.value = null;
     this.navigationDebug?.reset();

@@ -40,10 +40,10 @@ import {
   TileCache,
 } from "recast-navigation";
 
-export interface INavMeshParameters {
-  expectedLayersPerTile: number;
-  maxLayers: number;
-}
+// interface INavMeshParameters {
+//   expectedLayersPerTile: number;
+//   maxLayers: number;
+// }
 
 export interface NavMeshParameters {
   cs: number;
@@ -233,9 +233,9 @@ export class RecastNavigationJSPlugin implements INavigationEnginePluginV2 {
   }
 
   createNavMeshWorker(
-    meshes: Array<Mesh>,
-    parameters: INavMeshParameters,
-    completion: (data?: Uint8Array) => void
+    _meshes: Array<Mesh>,
+    _parameters: INavMeshParameters,
+    _completion: (data?: Uint8Array) => void
   ): void {
     // TODO: implement
     throw new Error("Method not implemented.");

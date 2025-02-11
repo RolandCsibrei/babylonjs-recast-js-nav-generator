@@ -76,6 +76,7 @@ export const Footer = () => {
 
       <div>
         <a
+          title="recast-navigation-js"
           target="_blank"
           href="https://github.com/isaac-mason/recast-navigation-js"
         >
