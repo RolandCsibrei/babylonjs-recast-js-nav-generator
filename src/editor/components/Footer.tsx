@@ -58,7 +58,7 @@ const GithubSvg = () => (
 export const Footer = () => {
   return (
     <FooterContainer>
-      <div>NavMesh Generator</div>
+      <div>NavMesh Editor v1.0</div>
 
       <div>
         Powered by{" "}
@@ -76,9 +76,9 @@ export const Footer = () => {
 
       <div>
         <a
-          title="recast-navigation-js"
+          title="babylon.js NavMesh Editor"
           target="_blank"
-          href="https://github.com/isaac-mason/recast-navigation-js"
+          href="https://github.com/RolandCsibrei/babylonjs-recast-navigation-js-editor"
         >
           <GithubSvg />
         </a>
