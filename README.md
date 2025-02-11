@@ -25,6 +25,8 @@ Phase 1:
 - [x] Add AxisViewer
 - [x] Add various display options for the debug navmesh - debug drawer
 - [x] Relative sizes of on scene controls to the model size
+- [ ] Loading state
+- [ ] Use one loader for DND and file input loads
 
 Phase 2:
 
