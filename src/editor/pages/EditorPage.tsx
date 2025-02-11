@@ -9,6 +9,7 @@ import { useGlbDisplayControls } from "../leva-controls/glb-display-controls";
 import { useClipPlaneControls } from "../leva-controls/clip-planes-controls";
 import { useTestAgentControls } from "../leva-controls/test-agent-controls";
 import { useDebugDrawerControls } from "../leva-controls/debug-drawer-controls";
+import { useSceneDisplayControls } from "../leva-controls/scene-display-controls";
 
 import {
   DefaultGlbSize,
@@ -16,7 +17,8 @@ import {
   signalModelBlob,
   signalNavMeshParameters,
 } from "../state/signals";
-import { useSceneDisplayControls } from "../leva-controls/scene-display-controls";
+
+import FileLoader from "../components/FileLoader";
 
 export function EditorPage() {
   useSignals();
@@ -69,14 +71,18 @@ export function EditorPage() {
   useClipPlaneControls();
 
   return (
-    <Leva
-      hidden={false}
-      theme={{
-        sizes: {
-          rootWidth: "400px",
-          controlWidth: "150px",
-        },
-      }}
-    />
+    <>
+      <FileLoader />
+
+      <Leva
+        hidden={false}
+        theme={{
+          sizes: {
+            rootWidth: "400px",
+            controlWidth: "150px",
+          },
+        }}
+      />
+    </>
   );
 }

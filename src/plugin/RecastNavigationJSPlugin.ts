@@ -40,6 +40,11 @@ import {
   TileCache,
 } from "recast-navigation";
 
+export interface INavMeshParameters {
+  expectedLayersPerTile: number;
+  maxLayers: number;
+}
+
 export interface NavMeshParameters {
   cs: number;
   ch: number;
@@ -194,6 +199,7 @@ export class RecastNavigationJSPlugin implements INavigationEnginePluginV2 {
    */
   public navMesh?: NavMesh;
   public navMeshQuery!: NavMeshQuery; // TODO: !
+
   public intermediates?:
     | SoloNavMeshGeneratorIntermediates
     | TiledNavMeshGeneratorIntermediates;
@@ -312,7 +318,7 @@ export class RecastNavigationJSPlugin implements INavigationEnginePluginV2 {
   }
 
   private _getReversedIndices(mesh: Mesh) {
-    const indices = mesh.getIndices();
+    const indices = mesh.getIndices(false, true);
 
     if (indices) {
       // Reverse the order of vertices in each triangle (3 indices per face)
@@ -397,6 +403,7 @@ export class RecastNavigationJSPlugin implements INavigationEnginePluginV2 {
         }
       }
     }
+
     return [Float32Array.from(positions), Uint32Array.from(indices)];
   }
 
@@ -429,10 +436,14 @@ export class RecastNavigationJSPlugin implements INavigationEnginePluginV2 {
       // [Units: wu] [1]
       detailSampleMaxError: parameters.detailSampleMaxError,
 
+      expectedLayersPerTile: parameters.expectedLayersPerTile,
+
       // The maximum allowed length for contour edges along the border of the mesh.
       // [Limit: >=0]
       // [Units: vx] [12]
       maxEdgeLen: parameters.maxEdgeLen,
+
+      maxLayers: parameters.maxLayers,
 
       //The maximum distance a simplified contour's border edges should deviate from the original raw contour.
       // [Limit: >=0]
@@ -534,7 +545,7 @@ export class RecastNavigationJSPlugin implements INavigationEnginePluginV2 {
         [this._positions.buffer, this._indices.buffer]
       );
       this._worker.onmessage = (e) => {
-        if ((e as any).data?.succes === false) {
+        if (e.data?.succes === false) {
           throw new Error(`Unable to generateSoloNavMesh:${e}`);
         } else {
           this.buildFromNavmeshData(e.data);
@@ -1372,7 +1383,19 @@ export class RecastNavigationJSPlugin implements INavigationEnginePluginV2 {
    * Disposes
    */
   public dispose() {
-    // nothing to dispose - mimics the behavior of the original navgiation plugin
+    //
+  }
+
+  /**
+   * Destroys recast related raw data
+   */
+  public destroy() {
+    if (!this.navMesh) {
+      return;
+    }
+    this.navMeshQuery.destroy();
+    this.navMesh?.destroy();
+    this.navMesh = undefined;
   }
 
   private _createTileCache(tileSize = 32) {

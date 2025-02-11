@@ -23,6 +23,7 @@ import {
   signalDebugDrawerControls,
   signalGeneratorIntermediates,
   signalNavMesh,
+  signalNavMeshParameters,
 } from "../state/signals";
 
 import { createFilesInput } from "../utils/scene-loader";
@@ -65,7 +66,6 @@ export class EditorScene {
   public root: Nullable<Mesh> = null;
   public filesInput: Nullable<FilesInput> = null;
 
-  // public debugNavMeshMaterial: StandardMaterial;
   public navMeshGeneratorInputMeshMaterial: StandardMaterial;
   public navMeshGeneratorInputMesh: Nullable<Mesh> = null;
   public scaling = new Vector3(1, 1, 1); // calculated from the loaded model bounds, used to scale addiitonal controls on the scene
@@ -97,7 +97,6 @@ export class EditorScene {
     this.light = light;
     this.ui = AdvancedDynamicTexture.CreateFullscreenUI("ui");
 
-    // this.debugNavMeshMaterial = this._createDebugNavMeshMaterial();
     this.navMeshGeneratorInputMeshMaterial =
       this._createnavMeshGeneratorInputMeshMaterial();
   }
@@ -169,10 +168,15 @@ export class EditorScene {
     });
   }
 
-  public resetScene() {
-    this.navigationDebug?.reset();
-    signalNavMesh.value?.destroy();
+  public resetNavigatio() {
+    debugger;
+    signalNavMeshParameters.value = null;
     signalNavMesh.value = null;
+    this.navigationDebug?.reset();
+    this.navigation?.destroy();
+  }
+
+  public resetScene() {
     this.removeExistingModels();
     this._resetCamera();
   }

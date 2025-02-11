@@ -41,7 +41,7 @@ const signalIsInspectorOpen = signal(false);
 const signalEditor = signal<EditorScene>();
 const signalModelBlob = signal<Blob | null | DefaultGlbSize>(null);
 
-const signalNavMeshParameters = signal<NavMeshParameters>();
+const signalNavMeshParameters = signal<NavMeshParameters | null>(null);
 const signalNavMesh = signal<NavMesh | null>(null);
 
 const signGlbDisplayOptions = signal<{

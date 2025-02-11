@@ -17,6 +17,7 @@ import { unsubscribeClipPlanes } from "./clip-planes";
 export function subscribeModelBlob(editor: EditorScene) {
   // TODO: unsubscribe?
   signalModelBlob.subscribe(async (blob) => {
+    editor.resetNavigatio();
     editor.resetScene();
 
     unsubscribeClipPlanes(editor);
