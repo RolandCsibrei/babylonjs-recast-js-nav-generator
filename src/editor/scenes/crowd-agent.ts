@@ -137,8 +137,8 @@ export function agentControlsToAgentParameters(controls: AgentControls) {
     maxSpeed: controls.agentMaxSpeed, // Agent speed
     maxAcceleration: controls.agentMaxAcceleration, // Maximum acceleration
     collisionQueryRange: controls.agentRadius * 2, // How far the agent will look ahead for collisions
-    pathOptimizationRange: controls.agentRadius * 3, // Range for path optimization
-    separationWeight: 4.0, // Avoidance behavior separation weight
+    pathOptimizationRange: 0, // controls.agentRadius * 3, // Range for path optimization
+    separationWeight: 1.0, // Avoidance behavior separation weight
     obstacleAvoidanceType: 3, // High quality avoidance
   };
 }

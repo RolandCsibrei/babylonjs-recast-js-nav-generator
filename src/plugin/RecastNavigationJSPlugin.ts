@@ -1416,6 +1416,26 @@ export class RecastNavigationJSPlugin implements INavigationEnginePluginV2 {
     }
   }
 
+  public updateTileCache() {
+    if (!this.navMesh || !this._tileCache) {
+      return;
+    }
+
+    let upToDate;
+    while (!upToDate) {
+      const result = this._tileCache.update(this.navMesh);
+      if (!result.success) {
+        console.error("Unable to update tile cache.", result.status);
+        return;
+      }
+      upToDate = result.upToDate;
+    }
+
+    this.navMeshQuery = new NavMeshQuery(this.navMesh);
+
+    console.log("Tile cache up to date:", upToDate ? "yes" : "no");
+  }
+
   /**
    * Creates a cylinder obstacle and add it to the navigation
    * @param position world position

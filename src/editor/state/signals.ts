@@ -82,6 +82,8 @@ const signalIndexedTriangleInputMeshData = signal<{
   indices: Uint32Array | null;
 } | null>(null);
 
+const signalObstacleMode = signal(false);
+
 export {
   signalEditor,
   sigalnIsLoading,
@@ -103,4 +105,6 @@ export {
   signalIndexedTriangleInputMeshData,
   signGlbDisplayOptions,
   signalClipPlanes,
+  //
+  signalObstacleMode,
 };

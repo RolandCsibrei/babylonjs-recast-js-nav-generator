@@ -52,6 +52,7 @@ import {
 import { subscribeDisplayScenel } from "./display-scene";
 import { AxesViewer } from "@babylonjs/core/Debug/axesViewer";
 import { drawDebug } from "../../plugin/debug-drawer";
+import { subscribeObstacles } from "./obstacles";
 
 export const MAIN_LIGHT_NAME = "main-light";
 
@@ -216,6 +217,7 @@ export class EditorScene {
     subscribeDisplayOptions(this);
     subscribeDebugDrawerControls(this);
     subscribeTestAgent(this);
+    subscribeObstacles(this);
   }
 
   private _createDragAndDropLoader() {
@@ -269,6 +271,8 @@ export class EditorScene {
     if (!this.navigation) {
       return;
     }
+
+    debugger;
 
     if (this.agent) {
       updateCrowdAgentParams(this, controls);
