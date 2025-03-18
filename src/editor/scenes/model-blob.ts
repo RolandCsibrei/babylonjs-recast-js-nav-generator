@@ -17,7 +17,7 @@ import { unsubscribeClipPlanes } from "./clip-planes";
 export function subscribeModelBlob(editor: EditorScene) {
   // TODO: unsubscribe?
   signalModelBlob.subscribe(async (blob) => {
-    editor.resetNavigatio();
+    editor.resetNavigation();
     editor.resetScene();
 
     unsubscribeClipPlanes(editor);
@@ -49,7 +49,7 @@ export function subscribeModelBlob(editor: EditorScene) {
       Tags.AddTagsTo(m, TAG_MODEL);
     }
 
-    editor.recalcScalinfFromLoadedModel();
+    editor.recalcScalingFromLoadedModel();
     zoomOnScene(editor.scene, editor.camera);
   });
 }

@@ -1,7 +1,7 @@
 import { button, useControls } from "leva";
 import { useSignals } from "@preact/signals-react/runtime";
 
-import { sigalnIsLoading, signalNavMesh } from "../state/signals";
+import { signalIsLoading, signalNavMesh } from "../state/signals";
 import { levaText } from "./plugins/leva-text";
 
 export const useGlbControls = ({
@@ -21,15 +21,15 @@ export const useGlbControls = ({
     "GLB Actions",
     {
       "Load GLB": button(() => loadGlb(), {
-        disabled: sigalnIsLoading.value,
+        disabled: signalIsLoading.value,
       }),
       _1: levaText("Or drag and drop to load.GLB/GLTF supported."),
 
       "Load Example GLB - Small": button(() => loadDefaultGlbSmall(), {
-        disabled: sigalnIsLoading.value,
+        disabled: signalIsLoading.value,
       }),
       "Load Example GLB - Big": button(() => loadDefaultGlbBig(), {
-        disabled: sigalnIsLoading.value,
+        disabled: signalIsLoading.value,
       }),
       "Export as GLTF": button(exportAsGlb, {
         disabled: !signalNavMesh.value,

@@ -334,7 +334,12 @@ export class RecastNavigationJSPlugin implements INavigationEnginePluginV2 {
   }
 
   private _getPositionsAndIndices(
-    meshes: Mesh[]
+    meshes: Mesh[],
+    positionsOffset: IVector3Like = {
+      x: 0,
+      y: 0,
+      z: 0,
+    }
   ): [positions: Float32Array, indices: Uint32Array] {
     let offset = 0;
     let index: number;
@@ -396,7 +401,11 @@ export class RecastNavigationJSPlugin implements INavigationEnginePluginV2 {
           for (pt = 0; pt < meshPositions.length; pt += 3) {
             Vector3.FromArrayToRef(meshPositions, pt, position);
             Vector3.TransformCoordinatesToRef(position, wm, transformed);
-            positions.push(transformed.x, transformed.y, transformed.z);
+            positions.push(
+              transformed.x + positionsOffset.x,
+              transformed.y + positionsOffset.y,
+              transformed.z + positionsOffset.z
+            );
           }
 
           offset += meshPositions.length / 3;
@@ -511,7 +520,8 @@ export class RecastNavigationJSPlugin implements INavigationEnginePluginV2 {
   createNavMesh(
     meshes: Array<Mesh>,
     parameters: INavMeshParameters,
-    completion?: (navmeshData: Uint8Array) => void
+    completion?: (navmeshData: Uint8Array) => void,
+    positionOffset?: IVector3Like
   ): void {
     if (this._worker && !completion) {
       Logger.Warn(
@@ -527,7 +537,10 @@ export class RecastNavigationJSPlugin implements INavigationEnginePluginV2 {
       throw new Error("At least one mesh is needed to create the nav mesh.");
     }
 
-    const [positions, indices] = this._getPositionsAndIndices(meshes);
+    const [positions, indices] = this._getPositionsAndIndices(
+      meshes,
+      positionOffset
+    );
 
     this._positions = positions;
     this._indices = indices;
@@ -1383,6 +1396,10 @@ export class RecastNavigationJSPlugin implements INavigationEnginePluginV2 {
    * Disposes
    */
   public dispose() {
+    // clea up recast stuff
+    this.destroy();
+
+    // clean up babylonjs stuff
     //
   }
 

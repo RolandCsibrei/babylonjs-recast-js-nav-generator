@@ -35,7 +35,7 @@ export type SignalSub = (() => void) | undefined;
 
 type XYZ = { x: number; y: number; z: number };
 
-const sigalnIsLoading = signal(false);
+const signalIsLoading = signal(false);
 const signalIsInspectorOpen = signal(false);
 
 const signalEditor = signal<EditorScene>();
@@ -43,6 +43,8 @@ const signalModelBlob = signal<Blob | null | DefaultGlbSize>(null);
 
 const signalNavMeshParameters = signal<NavMeshParameters | null>(null);
 const signalNavMesh = signal<NavMesh | null>(null);
+
+const signalNavMeshOffset = signal<XYZ>({ x: 0, y: 0, z: 0 });
 
 const signGlbDisplayOptions = signal<{
   displayModel: boolean;
@@ -86,7 +88,7 @@ const signalObstacleMode = signal(false);
 
 export {
   signalEditor,
-  sigalnIsLoading,
+  signalIsLoading,
   signalIsInspectorOpen,
   //
   signalModelBlob,
@@ -107,4 +109,6 @@ export {
   signalClipPlanes,
   //
   signalObstacleMode,
+  //
+  signalNavMeshOffset,
 };

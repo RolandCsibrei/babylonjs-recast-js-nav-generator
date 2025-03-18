@@ -23,6 +23,7 @@ import {
   signalDebugDrawerControls,
   signalGeneratorIntermediates,
   signalNavMesh,
+  signalNavMeshOffset,
   signalNavMeshParameters,
 } from "../state/signals";
 
@@ -169,8 +170,8 @@ export class EditorScene {
     });
   }
 
-  public resetNavigatio() {
-    signalNavMeshParameters.value = null;
+  public resetNavigation() {
+    // signalNavMeshParameters.value = null;
     signalNavMesh.value = null;
     this.navigationDebug?.reset();
     this.navigation?.destroy();
@@ -255,7 +256,7 @@ export class EditorScene {
     this._diposeNodes([...meshNodeIdstoDispose]);
   }
 
-  public recalcScalinfFromLoadedModel() {
+  public recalcScalingFromLoadedModel() {
     const rootBB = this.root?.getHierarchyBoundingVectors(true);
     if (rootBB) {
       const width = rootBB.max.x - rootBB.min.x;
@@ -271,8 +272,6 @@ export class EditorScene {
     if (!this.navigation) {
       return;
     }
-
-    debugger;
 
     if (this.agent) {
       updateCrowdAgentParams(this, controls);
@@ -327,8 +326,30 @@ export class EditorScene {
     if (!this.navigation?.navMesh) {
       return;
     }
-    const navMeshExport = exportNavMesh(this.navigation.navMesh);
-    download(navMeshExport, "application/octet-stream", "navmesh.bin");
+
+    const offset = signalNavMeshOffset.value;
+    if (offset.x !== 0 || offset.y !== 0 || offset.z !== 0) {
+      const pluginTemp = new RecastNavigationJSPlugin();
+      const navMeshParameters = signalNavMeshParameters.peek();
+      if (navMeshParameters) {
+        pluginTemp.createNavMesh(
+          this.getMeshesForNavMeshCreation(),
+          navMeshParameters,
+          undefined,
+          offset
+        );
+
+        if (pluginTemp.navMesh) {
+          const navMeshExport = exportNavMesh(pluginTemp.navMesh);
+          download(navMeshExport, "application/octet-stream", "navmesh.bin");
+        }
+
+        pluginTemp.dispose();
+      }
+    } else {
+      const navMeshExport = exportNavMesh(this.navigation.navMesh);
+      download(navMeshExport, "application/octet-stream", "navmesh.bin");
+    }
   }
 
   public async exportAsGlb() {

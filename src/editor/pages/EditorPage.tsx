@@ -19,7 +19,7 @@ import {
 } from "../state/signals";
 
 import FileLoader from "../components/FileLoader";
-import { useObstaclesControls } from "../leva-controls/obstacles-controls";
+// import { useObstaclesControls } from "../leva-controls/obstacles-controls";
 
 export function EditorPage() {
   useSignals();
@@ -62,7 +62,7 @@ export function EditorPage() {
     exportAsRecastNavMesh,
   });
 
-  useObstaclesControls();
+  // useObstaclesControls();
 
   useGlbDisplayControls();
   useSceneDisplayControls();

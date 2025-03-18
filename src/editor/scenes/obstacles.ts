@@ -52,7 +52,6 @@ function subscribeObstacletTargetPicker(editor: EditorScene) {
       return;
     }
 
-    debugger;
     const boxObstacleMesh = CreateBox("obstacle-box", {
       width: 4,
       height: 4,
