@@ -10,10 +10,10 @@ const Layout = styled.div`
   height: 100dvh;
 `;
 
-import { EditorPage } from "./pages/EditorPage";
 import { EditorScene } from "./scenes/EditorScene";
 
 import { signalEditor } from "./state/signals";
+import { EditorPage } from "./pages/EditorPage";
 
 function App() {
   const canvas = document.getElementById("renderCanvas") as HTMLCanvasElement;
@@ -27,6 +27,7 @@ function App() {
       signalEditor.value = editorScene;
     });
   });
+
   return (
     <Layout>
       <EditorPage />

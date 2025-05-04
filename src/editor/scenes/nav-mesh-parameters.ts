@@ -1,6 +1,7 @@
 import {
   signalGeneratorIntermediates,
   signalIndexedTriangleInputMeshData,
+  signalIsLoading,
   signalNavMesh,
   signalNavMeshParameters,
 } from "../state/signals";
@@ -13,28 +14,42 @@ export function subscribeNavMeshParamaters(editor: EditorScene) {
       return;
     }
 
+    signalIsLoading.value = true;
+
     // generate the navmesh
     try {
-      disposeCrowd(editor);
+      setTimeout(() => {
+        if (!navMeshParams || !editor.navigation) {
+          return;
+        }
 
-      editor.resetNavigation();
+        signalIsLoading.value = true;
 
-      editor.navigation.createNavMesh(
-        editor.getMeshesForNavMeshCreation(),
-        navMeshParams
-      );
+        disposeCrowd(editor);
 
-      signalIndexedTriangleInputMeshData.value = {
-        positions: editor.navigation.positions,
-        indices: editor.navigation.indices,
-      };
+        editor.resetNavigation();
 
-      signalNavMesh.value = editor.navigation.navMesh ?? null;
-      signalGeneratorIntermediates.value =
-        editor.navigation.intermediates ?? null;
+        console.time("gen");
+        editor.navigation.createNavMesh(
+          editor.getMeshesForNavMeshCreation(),
+          navMeshParams
+        );
+        signalIsLoading.value = false;
 
-      // generate the new debug navmesh
-      editor.drawDebug();
+        console.timeEnd("gen");
+
+        signalIndexedTriangleInputMeshData.value = {
+          positions: editor.navigation.positions,
+          indices: editor.navigation.indices,
+        };
+
+        signalNavMesh.value = editor.navigation.navMesh ?? null;
+        signalGeneratorIntermediates.value =
+          editor.navigation.intermediates ?? null;
+
+        // generate the new debug navmesh
+        editor.drawDebug();
+      }, 20);
     } catch (error) {
       console.error(error);
       signalNavMesh.value = null;

@@ -374,23 +374,24 @@ export class RecastNavigationJSPluginDebug {
     vertexData.applyToMesh(customMesh);
 
     customMesh.material = this.triMaterial;
-
     customMesh.parent = this.debugDrawerParentNode;
   }
 
+  /**
+   * Merge the debug meshes for better performance
+   */
   private _joinDebugMeshes() {
     const debugMeshes = this._scene.meshes.filter(
       (m) => m.name === NAV_MESH_DEBUG_NAME
     ) as Mesh[];
 
+    // only indexed meshes can be merged
     debugMeshes.forEach((m) => {
       this._convertUnindexedToIndexed(m);
     });
 
-    console.log(debugMeshes);
     const merged = Mesh.MergeMeshes(debugMeshes, true);
     if (merged) {
-      merged.material = this.triMaterial;
       merged.parent = this.debugDrawerParentNode;
     }
   }

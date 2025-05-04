@@ -35,7 +35,21 @@ export type SignalSub = (() => void) | undefined;
 
 type XYZ = { x: number; y: number; z: number };
 
+const loadingModal = document.getElementById("loadingModal");
+
 const signalIsLoading = signal(false);
+signalIsLoading.subscribe((value) => {
+  if (!loadingModal) {
+    return;
+  }
+
+  if (value) {
+    loadingModal.style.display = "flex";
+  } else {
+    loadingModal.style.display = "none";
+  }
+});
+
 const signalIsInspectorOpen = signal(false);
 
 const signalEditor = signal<EditorScene>();
