@@ -54,7 +54,7 @@ export const Footer = () => {
         >
           <GithubSvg />
         </a>
-        babylon.js NavMesh Generator v1.0.&nbsp;&nbsp;Powered by{" "}
+        babylon.js NavMesh Generator v1.2.&nbsp;&nbsp;Powered by{" "}
         <a
           target="_blank"
           href="https://github.com/isaac-mason/recast-navigation-js"
