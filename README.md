@@ -1,4 +1,4 @@
-# Babylon.js Recast Navigation Editor
+# Babylon.js Recast Navigation Generator
 
 ## Install
 
