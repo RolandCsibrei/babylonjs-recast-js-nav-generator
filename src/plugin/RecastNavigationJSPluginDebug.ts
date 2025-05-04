@@ -4,10 +4,14 @@ import { Color3 } from "@babylonjs/core/Maths/math.color";
 import { Matrix } from "@babylonjs/core/Maths/math.vector";
 import { CreateDisc } from "@babylonjs/core/Meshes/Builders/discBuilder";
 import { CreateGreasedLine } from "@babylonjs/core/Meshes/Builders/greasedLineBuilder";
-import { GreasedLineMeshOptions } from "@babylonjs/core/Meshes/GreasedLine/greasedLineBaseMesh";
+import {
+  GreasedLineBaseMesh,
+  GreasedLineMeshOptions,
+} from "@babylonjs/core/Meshes/GreasedLine/greasedLineBaseMesh";
 import { Mesh } from "@babylonjs/core/Meshes/mesh";
 import { VertexData } from "@babylonjs/core/Meshes/mesh.vertexData";
 import { TransformNode } from "@babylonjs/core/Meshes/transformNode";
+import { Nullable } from "@babylonjs/core/types";
 import {
   DebugDrawerPrimitive,
   DebugDrawerUtils,
@@ -83,14 +87,20 @@ export class RecastNavigationJSPluginDebug {
   }
 
   public drawPrimitives(primitives: DebugDrawerPrimitive[]) {
+    let linesInstance = null;
+
     for (const primitive of primitives) {
       switch (primitive.type) {
         case "points":
           this._drawPoints(primitive);
           break;
-        case "lines":
-          this.drawLines(primitive);
+        case "lines": {
+          const line = this.drawLines(primitive, linesInstance);
+          if (!linesInstance) {
+            linesInstance = line;
+          }
           break;
+        }
         case "tris":
           this.drawTris(primitive);
           break;
@@ -99,6 +109,8 @@ export class RecastNavigationJSPluginDebug {
           break;
       }
     }
+
+    linesInstance?.updateLazy();
   }
 
   public drawHeightfieldSolid(hf: RecastHeightfield): void {
@@ -251,9 +263,12 @@ export class RecastNavigationJSPluginDebug {
     this._pointMesh.parent = this.debugDrawerParent;
   }
 
-  private drawLines(primitive: DebugDrawerPrimitive): void {
+  private drawLines(
+    primitive: DebugDrawerPrimitive,
+    instance: Nullable<GreasedLineBaseMesh>
+  ): Nullable<GreasedLineBaseMesh> {
     if (primitive.vertices.length === 0) {
-      return;
+      return null;
     }
 
     const points: number[][] = [];
@@ -273,6 +288,8 @@ export class RecastNavigationJSPluginDebug {
       "debugLines",
       {
         points,
+        instance: instance ?? undefined,
+        lazy: true,
       },
       {
         colors,
@@ -282,6 +299,8 @@ export class RecastNavigationJSPluginDebug {
 
     lines.parent = this.debugDrawerParent;
     this.lineMaterials.push(lines.material as StandardMaterial);
+
+    return lines;
   }
 
   private drawTris(primitive: DebugDrawerPrimitive): void {
