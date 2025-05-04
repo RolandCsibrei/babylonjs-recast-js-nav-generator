@@ -12,7 +12,7 @@ export function subscribeDebugDrawerControls(editor: EditorScene) {
       return;
     }
 
-    editor.navigationDebug?.debugDrawerParent.setEnabled(
+    editor.navigationDebug?.debugDrawerParentNode.setEnabled(
       controls.navMeshDebugDraw
     );
 

@@ -119,7 +119,7 @@ export class EditorScene {
     await initRecast();
 
     this.navigation = new RecastNavigationJSPlugin();
-    this.navigationDebug = new RecastNavigationJSPluginDebug();
+    this.navigationDebug = new RecastNavigationJSPluginDebug(this.scene);
   }
 
   private _createScene(canvas: HTMLCanvasElement) {

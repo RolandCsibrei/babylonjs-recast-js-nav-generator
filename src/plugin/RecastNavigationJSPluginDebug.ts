@@ -11,6 +11,7 @@ import {
 import { Mesh } from "@babylonjs/core/Meshes/mesh";
 import { VertexData } from "@babylonjs/core/Meshes/mesh.vertexData";
 import { TransformNode } from "@babylonjs/core/Meshes/transformNode";
+import { Scene } from "@babylonjs/core/scene";
 import { Nullable } from "@babylonjs/core/types";
 import {
   DebugDrawerPrimitive,
@@ -34,20 +35,23 @@ export class RecastNavigationJSPluginDebug {
   public lineMaterials: StandardMaterial[] = [];
   private _pointMesh: Mesh;
 
-  public debugDrawerParent = new TransformNode("debugDrawerParent");
+  public debugDrawerParentNode = new TransformNode("debugDrawerParent");
 
   private debugDrawerUtils: DebugDrawerUtils;
-  constructor(materials?: {
-    triMaterial?: StandardMaterial;
-    pointMaterial?: StandardMaterial;
-    lineMaterials: {
-      graasedLineMaterialOptions: GreasedLineMaterialOptions;
-      graasedLineMeshlOptions: GreasedLineMeshOptions;
-    };
-  }) {
+  constructor(
+    private _scene: Scene,
+    materials?: {
+      triMaterial?: StandardMaterial;
+      pointMaterial?: StandardMaterial;
+      lineMaterials: {
+        graasedLineMaterialOptions: GreasedLineMaterialOptions;
+        graasedLineMeshlOptions: GreasedLineMeshOptions;
+      };
+    }
+  ) {
     this.debugDrawerUtils = new DebugDrawerUtils();
 
-    this.debugDrawerParent.position.y += 0.01;
+    this.debugDrawerParentNode.position.y += 0.01;
 
     if (materials?.triMaterial) {
       this.triMaterial = materials.triMaterial;
@@ -70,7 +74,7 @@ export class RecastNavigationJSPluginDebug {
   }
 
   public reset() {
-    for (const child of this.debugDrawerParent.getChildMeshes()) {
+    for (const child of this.debugDrawerParentNode.getChildMeshes()) {
       child.dispose();
     }
   }
@@ -111,6 +115,7 @@ export class RecastNavigationJSPluginDebug {
     }
 
     linesInstance?.updateLazy();
+    this._joinDebugMeshes();
   }
 
   public drawHeightfieldSolid(hf: RecastHeightfield): void {
@@ -260,7 +265,7 @@ export class RecastNavigationJSPluginDebug {
     this._pointMesh.thinInstanceSetBuffer("matrix", matricesData, 16);
     this._pointMesh.thinInstanceSetBuffer("color", colorData, 4);
 
-    this._pointMesh.parent = this.debugDrawerParent;
+    this._pointMesh.parent = this.debugDrawerParentNode;
   }
 
   private drawLines(
@@ -297,7 +302,7 @@ export class RecastNavigationJSPluginDebug {
       }
     );
 
-    lines.parent = this.debugDrawerParent;
+    lines.parent = this.debugDrawerParentNode;
     this.lineMaterials.push(lines.material as StandardMaterial);
 
     return lines;
@@ -334,7 +339,7 @@ export class RecastNavigationJSPluginDebug {
 
     customMesh.material = this.triMaterial;
 
-    customMesh.parent = this.debugDrawerParent;
+    customMesh.parent = this.debugDrawerParentNode;
   }
 
   private _drawQuads(primitive: DebugDrawerPrimitive): void {
@@ -370,6 +375,43 @@ export class RecastNavigationJSPluginDebug {
 
     customMesh.material = this.triMaterial;
 
-    customMesh.parent = this.debugDrawerParent;
+    customMesh.parent = this.debugDrawerParentNode;
+  }
+
+  private _joinDebugMeshes() {
+    const debugMeshes = this._scene.meshes.filter(
+      (m) => m.name === NAV_MESH_DEBUG_NAME
+    ) as Mesh[];
+
+    debugMeshes.forEach((m) => {
+      this._convertUnindexedToIndexed(m);
+    });
+
+    console.log(debugMeshes);
+    const merged = Mesh.MergeMeshes(debugMeshes, true);
+    if (merged) {
+      merged.material = this.triMaterial;
+      merged.parent = this.debugDrawerParentNode;
+    }
+  }
+
+  private _convertUnindexedToIndexed(mesh: Mesh): void {
+    const vertexData = VertexData.ExtractFromMesh(mesh);
+    const positions = vertexData.positions;
+
+    if (!positions || positions.length % 9 !== 0) {
+      console.warn("Mesh must be fully unindexed with triangles.");
+      return;
+    }
+
+    const vertexCount = positions.length / 3;
+
+    const indices = Array.from({ length: vertexCount }, (_, i) => i);
+
+    const newVertexData = new VertexData();
+    newVertexData.positions = positions;
+    newVertexData.indices = indices;
+
+    newVertexData.applyToMesh(mesh, true);
   }
 }
