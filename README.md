@@ -25,14 +25,14 @@ Phase 1:
 - [x] Add AxisViewer
 - [x] Add various display options for the debug navmesh - debug drawer
 - [x] Relative sizes of on scene controls to the model size
-- [ ] Loading state
-- [ ] Use one loader for DND and file input loads
+- [x] Loading state
+- [ ] Use one loader for drag and drop and file input loads
 - [ ] Load any suported model file format
 
 Phase 2:
 
-- [ ] Obstacles
-- [ ] Support for single thread, WASM and worker for nav mesh computation
+- [ ] Add dynamic Obstacles - 80% done
+- [ ] Add dynamic teleports - 50% done
 
 Phase 3:
 
