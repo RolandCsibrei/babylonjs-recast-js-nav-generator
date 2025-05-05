@@ -8,9 +8,9 @@
 
 `npm run dev`
 
-## Online version
+## Live site
 
-<https://nav-editor.babylonjs.xyz/>
+<https://navmesh-generator.babylonjs.xyz/>
 
 TODO:
 
