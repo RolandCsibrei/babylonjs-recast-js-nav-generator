@@ -42,7 +42,7 @@ class ErrorBoundary extends Component<Props, State> {
           window.location.reload();
         },
         title: "Fail, we have. But hope, we do not lose.",
-        text: "An unexpected error occurred. Refer to the console output for details. This typically indicates a misconfiguration in the navigation mesh parameters.",
+        text: "An unexpected error occurred. Refer to the console output for details. This typically indicates a misconfiguration in the navigation mesh parameters. If the problem persists, you can submit an issue in the GitHub repository by clicking the GitHub icon in the footer.",
         buttons: [
           {
             label: "Reload page",
